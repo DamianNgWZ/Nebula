@@ -13,7 +13,7 @@
 **Frontend:** Next.js, Tailwind CSS, Shadcn/UI(For modern minimalist components), Conform  
 **Backend/API:** Next.js API routes, Nylas (For Seamless Calender and Email Integration)  
 **Authentication:** Auth.js  
-**Database:** Supabase  
+**Database:** Supabase(with Prisma ORM)
 **Deployment & Testing:** Vercel
 
 # Below are the instructions to run our project :)
