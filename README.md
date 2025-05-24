@@ -10,8 +10,8 @@
 
 ## Tech Stack
 
-**Frontend:** Next.js, Tailwind CSS, Shadcn/UI(For modern minimalist components), Conform  
-**Backend/API:** Next.js API routes, Nylas (For Seamless Calender and Email Integration)  
+**Frontend:** Next.js, Tailwind CSS, Shadcn/UI, Conform  
+**Backend/API:** Next.js API routes, Nylas  
 **Authentication:** Auth.js  
 **Database:** Supabase(with Prisma ORM)  
 **Deployment & Testing:** Vercel
