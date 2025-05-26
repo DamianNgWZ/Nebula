@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
+import { signIn } from "../lib/auth";
+import { GithubSubmitButton, GoogleSubmitButton } from "./SubmitButtons";
 
 export function AuthModal() {
     return (
@@ -10,8 +12,10 @@ export function AuthModal() {
                     Sign In / Sign Up
                 </Button>
             </DialogTrigger>
+
             <DialogContent className="sm:max-w-[370px] fixed top-1/2 left-1/2 !-translate-x-1/2 !-translate-y-1/2">
-                <DialogHeader className="flex flex-col items-center text-center space-y-4">
+                
+                <DialogHeader className="flex flex-row items-center justify-center space-x-2">
                     <Image 
                         src="/logo.png"
                         alt="Logo"
@@ -19,10 +23,32 @@ export function AuthModal() {
                         height={40}
                         className="rounded-lg"
                     />
-                    <DialogTitle className = "text-primary">
-                        Sign In / Sign Up
+                    <DialogTitle className = "text-primary text-3xl font-bold">
+                        <span className="text-black">Ne</span>
+                        Bula
                     </DialogTitle>
                 </DialogHeader>
+                
+                <div className="flex flex-col mt-5 space-y-5">
+                    
+                    <form 
+                        action = {async () => {
+                            "use server";
+                            await signIn("google");
+                        }
+                    }>
+                         <GoogleSubmitButton />
+                    </form>
+
+                    <form 
+                        action = {async () => {
+                            "use server";
+                            await signIn("github");
+                        }
+                    }>
+                         <GithubSubmitButton />
+                    </form>
+                </div>
             </DialogContent>
         </Dialog>
     );
