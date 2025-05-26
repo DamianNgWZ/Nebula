@@ -19,7 +19,9 @@ export function AuthModal() {
                         height={40}
                         className="rounded-lg"
                     />
-                    <DialogTitle>Sign In / Sign Up</DialogTitle>
+                    <DialogTitle className = "text-primary">
+                        Sign In / Sign Up
+                    </DialogTitle>
                 </DialogHeader>
             </DialogContent>
         </Dialog>
