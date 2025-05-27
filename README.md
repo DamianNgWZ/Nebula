@@ -6,7 +6,6 @@
 
 - Scheduling and Integration with Calender App
 -
--
 
 ## Tech Stack
 
