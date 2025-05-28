@@ -1,55 +1,108 @@
-<h1> Nebula: Scheduling for your Business</h1>
+# 🌌 Nebula: Scheduling for Your Business
 
-**A scheduling application built to reduce admin overheads for small businesses**
+**A scheduling application built to reduce admin overhead for small businesses.**
 
-## Features
+---
 
-- Scheduling and Integration with Calender App
--
+## ✨ Features
 
-## Tech Stack
+- Schedule meetings and manage availability
+- Integration with Google Calendar (via Nylas)
+- OAuth authentication via Google and GitHub
+- Responsive UI with Tailwind and Shadcn/UI components
+
+---
+
+## 🛠 Tech Stack
 
 **Frontend:** Next.js, Tailwind CSS, Shadcn/UI, Conform  
 **Backend/API:** Next.js API routes, Nylas  
 **Authentication:** Auth.js  
-**Database:** Supabase(with Prisma ORM)  
+**Database:** Supabase (with Prisma ORM)  
 **Deployment & Testing:** Vercel
 
-# Below are the instructions to run our project :)
+---
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 🚀 Getting Started
 
-## Getting Started
+To run the project locally:
 
-First, run the development server:
+1. **Clone the repository and navigate into it**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    ```bash
+    git clone https://github.com/yourusername/nebula.git
+    cd nebula
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install dependencies**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    ```bash
+    npm install
+    # or
+    yarn install
+    # or
+    pnpm install
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Configure environment variables**
 
-## Learn More
+    Copy the example env file and update it with real values:
 
-To learn more about Next.js, take a look at the following resources:
+    ```bash
+    cp .env.example .env
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    Then open `.env` in your editor and update the placeholders:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    ```env
+    DATABASE_URL="postgresql://<user>:<password>@<supabase-url>:6543/postgres?pgbouncer=true&statement_cache_mode=unsafe"
 
-## Deploy on Vercel
+    AUTH_GOOGLE_ID="your-google-client-id"
+    AUTH_GOOGLE_SECRET="your-google-client-secret"
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    AUTH_GITHUB_ID="your-github-client-id"
+    AUTH_GITHUB_SECRET="your-github-client-secret"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    AUTH_SECRET="your-auth-secret"
+    ```
+
+    > ⚠️ You do **not** need to run `npx prisma db push`, `migrate`, or any Prisma CLI commands.  
+    > The database is already provisioned — this setup is just for running and testing the app locally.
+
+4. **Start the development server**
+
+    ```bash
+    npm run dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
+
+---
+
+## 📁 Project Structure
+/app → App Router-based pages  
+/components → UI components  
+/prisma → Prisma schema and config  
+/lib → Auth, DB, utilities  
+/public → Static assets (logos, etc.) 
+
+---
+
+## 🌐 Deployment
+
+Deployed on [Vercel](https://vercel.com/). Pushes to `main` auto-deploy.
+
+---
+
+## 📚 Resources
+
+- [Next.js Docs](https://nextjs.org/docs)
+- [Supabase Docs](https://supabase.com/docs)
+- [Prisma Docs](https://www.prisma.io/docs)
+- [Auth.js Docs](https://authjs.dev)
+
+---
+
+## 🤝 Contributions
+
+Feel free to fork, clone, and open pull requests! All contributions are welcome.  
