@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
 
-export function ModeToggle() {
+export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false)
   const { setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false) 
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
-  if (!mounted) return null;
+  if (!mounted) return null
 
   return (
     <DropdownMenu>
