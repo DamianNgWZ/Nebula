@@ -1,7 +1,7 @@
 import { isLoggedIn } from "../lib/hooks";
 
 export default async function DashboardPage() {
-    const session = await isLoggedIn();
+    // const session = await isLoggedIn();
     
     return (
         <div>
