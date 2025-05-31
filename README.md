@@ -29,62 +29,63 @@ To run the project locally:
 
 1. **Clone the repository and navigate into it**
 
-    ```bash
-    git clone https://github.com/yourusername/nebula.git
-    cd nebula
-    ```
+   ```bash
+   git clone https://github.com/yourusername/nebula.git
+   cd nebula
+   ```
 
 2. **Install dependencies**
 
-    ```bash
-    npm install
-    # or
-    yarn install
-    # or
-    pnpm install
-    ```
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
 3. **Configure environment variables**
 
-    Copy the example env file and update it with real values:
+   Copy the example env file and update it with real values:
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
-    Then open `.env` in your editor and update the placeholders:
+   Then open `.env` in your editor and update the placeholders:
 
-    ```env
-    DATABASE_URL="postgresql://<user>:<password>@<supabase-url>:6543/postgres?pgbouncer=true&statement_cache_mode=unsafe"
+   ```env
+   DATABASE_URL="postgresql://<user>:<password>@<supabase-url>:6543/postgres?pgbouncer=true&statement_cache_mode=unsafe"
 
-    AUTH_GOOGLE_ID="your-google-client-id"
-    AUTH_GOOGLE_SECRET="your-google-client-secret"
+   AUTH_GOOGLE_ID="your-google-client-id"
+   AUTH_GOOGLE_SECRET="your-google-client-secret"
 
-    AUTH_GITHUB_ID="your-github-client-id"
-    AUTH_GITHUB_SECRET="your-github-client-secret"
+   AUTH_GITHUB_ID="your-github-client-id"
+   AUTH_GITHUB_SECRET="your-github-client-secret"
 
-    AUTH_SECRET="your-auth-secret"
-    ```
+   AUTH_SECRET="your-auth-secret"
+   ```
 
-    > ⚠️ You do **not** need to run `npx prisma db push`, `migrate`, or any Prisma CLI commands.  
-    > The database is already provisioned — this setup is just for running and testing the app locally.
+   > ⚠️ You do **not** need to run `npx prisma db push`, `migrate`, or any Prisma CLI commands.  
+   > The database is already provisioned — this setup is just for running and testing the app locally.
 
 4. **Start the development server**
 
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
-    Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
+   Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
 
 ---
 
 ## 📁 Project Structure
+
 /app → App Router-based pages  
 /components → UI components  
 /prisma → Prisma schema and config  
 /lib → Auth, DB, utilities  
-/public → Static assets (logos, etc.) 
+/public → Static assets (logos, etc.)
 
 ---
 
@@ -105,4 +106,4 @@ Deployed on [Vercel](https://vercel.com/). Pushes to `main` auto-deploy.
 
 ## 🤝 Contributions
 
-Feel free to fork, clone, and open pull requests! All contributions are welcome.  
+Feel free to fork, clone, and open pull requests! All contributions are welcome.
