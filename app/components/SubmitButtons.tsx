@@ -4,6 +4,45 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+
+interface SubmitButtonProps {
+  text: string;
+
+  variant?:
+    | "link"
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | null
+    | undefined;
+
+  className?: string;
+}
+
+export function SubmitButton({ text, variant, className }: SubmitButtonProps) {
+  const { pending } = useFormStatus();
+  return (
+    <>
+      {pending ? (
+        <Button disabled variant="outline" className={cn("w-fit", className)}>
+          <Loader2 className="size-4 mr-2 animate-spin" />
+          Loading...
+        </Button>
+      ) : (
+        <Button
+          type="submit"
+          variant={variant}
+          className={cn("w-fit", className)}
+        >
+          {text}
+        </Button>
+      )}
+    </>
+  );
+}
 
 export function GoogleSubmitButton() {
   const { pending } = useFormStatus();
