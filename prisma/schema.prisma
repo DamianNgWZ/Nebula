@@ -14,7 +14,8 @@ model User {
   name     String?
   role     UserRole?
   userName String?   @unique
-
+  grantId  String?
+  grantEmail String?
   email         String    @unique
   emailVerified DateTime?
   image         String?

@@ -37,5 +37,5 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
       role: submission.value.role,
     },
   });
-  return redirect("/dashboard");
+  return redirect("/onboarding/grant-id");
 }
