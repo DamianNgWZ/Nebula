@@ -9,11 +9,11 @@
 The motivation behind our project stems from real-world challenges faced by owners of 
 home-based or independent businesses. Through conversations with such business owners, 
 we gained valuable insights into the inefficiencies, especially so in service oriented 
-businesses such as hair stylists, make-up artists and the likeness. They face administrative
-hassles managing appointments and communicating with clients, especially when demand for the services
-they offer surges. This renders them unable to focus solely on mastering their craft, at times 
-undermining the significance of their skillset itself. Therefore, we aim to create a web app that 
-shoulders the administrtative burden of scheduling appointments and reminding clients of said 
+businesses such as hair stylists, make-up artists and the likeness. 
+
+They face administrative hassles managing appointments and communicating with clients, 
+especially when demand for the services they offer surges. Therefore, we aim to create 
+a web app that shoulders the administrtative burden of scheduling appointments and reminding clients of said 
 appointments. We aim to decrease the valuable time spent on such repetitive and human-error inducing
 processes, giving this time back to business owners to actually allow them to work on enhancing their
 services to the best of their abilities.
