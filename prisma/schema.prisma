@@ -9,18 +9,17 @@ datasource db {
 }
 
 model User {
-  id String @id @default(cuid())
-
-  name     String?
-  role     UserRole?
-  userName String?   @unique
-  grantId  String?
-  grantEmail String?
+  id            String    @id @default(cuid())
+  name          String?
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  role          UserRole?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  userName      String?   @unique
+  grantEmail    String?
+  grantId       String?
   accounts      Account[]
   sessions      Session[]
 }

@@ -15,7 +15,7 @@ export const zodSchema = z.object({
     })
     .min(3, { message: "Username must be at least 3 characters." })
     .max(50, { message: "Username must be less than 50 characters." })
-    .regex(/^[a-zA-Z0-9-]+$/, {
+    .regex(/^[a-zA-Z0-9_]+$/, {
       message: "Username can only contain letters, numbers, and underscores.",
     }),
 
