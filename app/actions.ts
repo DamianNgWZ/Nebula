@@ -3,7 +3,7 @@
 import prisma from "./lib/db";
 import { isLoggedIn } from "./lib/hooks";
 import { parseWithZod } from "@conform-to/zod";
-import { onBoardingSchemaValidation } from "./lib/zodSchemas";
+import { onBoardingSchemaValidation, settingsScheme } from "./lib/zodSchemas";
 import { redirect } from "next/navigation";
 
 export async function OnBoardingAction(prevState: any, formData: FormData) {
@@ -38,4 +38,27 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
     },
   });
   return redirect("/onboarding/grant-id");
+}
+
+export async function SettingsAction(prevState: any, formData: FormData) {
+  const session = await isLoggedIn();
+  const submission = parseWithZod(formData, {
+    schema: settingsScheme,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  const user = await prisma.user.update({
+    where: {
+      id: session.user?.id,
+    },
+    data: {
+      name: submission.value.fullName,
+      image: submission.value.profileImage,
+    },
+  });
+
+  return redirect("/dashboard");
 }
