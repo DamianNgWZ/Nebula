@@ -11,6 +11,8 @@ import { parseWithZod } from "@conform-to/zod";
 import { settingsScheme } from "../lib/zodSchemas";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UploadDropzone } from "../lib/uploadthing";
+import { toast } from "sonner";
 
 interface iAppProps {
     fullName: string;
@@ -57,6 +59,12 @@ export function SettingsForm({ email, fullName, profileImage }: iAppProps) {
                     </div>
                     <div className="grid gap y-2">
                         <Label>Profile Image</Label>
+                        <input 
+                            type="hidden" 
+                            name={fields.profileImage.name} 
+                            key={fields.profileImage.key} 
+                            value={currentProfileImage} 
+                        />
                         <div style={{ height: '1rem' }} />
                         {currentProfileImage ? (
                                 <div className="relative size-16">
@@ -77,9 +85,20 @@ export function SettingsForm({ email, fullName, profileImage }: iAppProps) {
                                     </Button>
                                 </div>
                             ) : (
-                                <h1>No Image</h1>
+                                <UploadDropzone 
+                                    onClientUploadComplete={(res) => {
+                                        setCurrentProfileImage(res[0].url)
+                                        toast.success("Profile image uploaded!")
+                                    }} 
+                                    onUploadError={(error) => {
+                                        console.log("something went wrong", error)
+                                        toast.error(error.message)
+                                    }}
+                                    endpoint="imageUploader" 
+                                />
                             )
                         }
+                        <p className="text-red-500 text-sm">{fields.profileImage.errors}</p>
                     </div>
                 </CardContent>
                 <div style={{ height: '1rem' }} />

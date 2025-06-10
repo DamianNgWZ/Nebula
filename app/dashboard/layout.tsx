@@ -23,6 +23,7 @@ import { signOut } from "../lib/auth";
 import { isLoggedIn } from "../lib/hooks";
 import prisma from "../lib/db";
 import { redirect } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 async function getData(userId: string) {
   //onboaridng redirection
@@ -156,6 +157,7 @@ export default async function DashboardLayout({
           </main>
         </div>
       </div>
+      <Toaster richColors closeButton/>
     </>
   );
 }
