@@ -22,6 +22,7 @@ model User {
   grantId       String?
   accounts      Account[]
   sessions      Session[]
+  availability  Availability[]
 }
 
 model Account {
@@ -63,4 +64,29 @@ model VerificationToken {
 enum UserRole {
   CUSTOMER
   BUSINESS_OWNER
+}
+
+model Availability {
+  id String @id @default(uuid())
+
+  day Day
+  fromTime String
+  tillTime String
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User  User?  @relation(fields: [userId], references: [id])
+  userId  String?
+}
+
+enum Day {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
 }
