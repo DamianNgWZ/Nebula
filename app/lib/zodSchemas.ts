@@ -74,3 +74,14 @@ export const settingsScheme = z.object({
   fullName: z.string().min(3).max(150),
   profileImage: z.string(),
 })
+
+export const productSchema = z.object({
+  name: z.string().min(2, "Product name must be at least 2 characters"),
+  description: z.string().optional(),
+  price: z
+    .string()
+    .refine(val => !isNaN(Number(val)), "Must be a number")
+    .transform(Number),
+  imageUrl: z.string().url("Must be a valid URL").optional(),
+});
+
