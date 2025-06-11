@@ -23,6 +23,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   Availability  Availability[]
+
+  Shop Shop[]
 }
 
 model Account {
@@ -86,3 +88,21 @@ enum Day {
   Saturday
   Sunday
 }
+model Shop {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id])
+}
+
