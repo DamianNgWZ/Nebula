@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import prisma from "./lib/db";
 import { isLoggedIn } from "./lib/hooks";
 import { parseWithZod } from "@conform-to/zod";
-import { onBoardingSchemaValidation, settingsScheme } from "./lib/zodSchemas";
+import {
+  onBoardingSchemaValidation,
+  settingsScheme,
+  productSchema,
+  shopSchema,
+} from "./lib/zodSchemas";
 import { redirect } from "next/navigation";
 
 export async function OnBoardingAction(prevState: any, formData: FormData) {
@@ -81,7 +88,7 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
 
 export async function SettingsAction(prevState: any, formData: FormData) {
   const session = await isLoggedIn();
-  const submission = await parseWithZod(formData, {
+  const submission = parseWithZod(formData, {
     schema: settingsScheme,
   });
 
@@ -100,4 +107,67 @@ export async function SettingsAction(prevState: any, formData: FormData) {
   });
 
   return redirect("/dashboard");
+}
+
+export async function CreateProductAction(prevState: any, formData: FormData) {
+  const session = await isLoggedIn();
+
+  const submission = parseWithZod(formData, {
+    schema: productSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  const shop = await prisma.shop.findFirst({
+    where: { ownerId: session.user?.id },
+  });
+
+  if (!shop) {
+    return submission.reply({
+      formErrors: ["Shop not found. Please create a shop first."],
+    });
+  }
+
+  await prisma.product.create({
+    data: {
+      ...submission.value,
+      shopId: shop.id,
+    },
+  });
+
+  return redirect("/dashboard/business");
+}
+
+export async function CreateShopAction(prevState: any, formData: FormData) {
+  const session = await isLoggedIn();
+
+  const submission = parseWithZod(formData, {
+    schema: shopSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  // check if shop already exists
+  const existingShop = await prisma.shop.findFirst({
+    where: { ownerId: session.user?.id },
+  });
+
+  if (existingShop) {
+    return submission.reply({
+      formErrors: ["You already have a shop created."],
+    });
+  }
+
+  await prisma.shop.create({
+    data: {
+      name: submission.value.name,
+      ownerId: session.user?.id,
+    },
+  });
+
+  return redirect("/dashboard/business");
 }
