@@ -85,3 +85,26 @@ export const productSchema = z.object({
   imageUrl: z.string().url("Must be a valid URL").optional(),
 });
 
+export const createBookingSchema = z.object({
+  productId: z.string(),
+  startTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid start time",
+  }),
+  endTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid end time",
+  }),
+});
+
+export const createTimeSlotTemplateSchema = z.object({
+  year: z.number().int().gte(2024),
+  month: z.number().int().min(1).max(12),
+  slotCount: z.number().int().min(1),
+  slotLength: z.number().int().min(15),
+  breaks: z.array(z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/)), // "HH:mm-HH:mm"
+});
+
+export const createCommentSchema = z.object({
+  productId: z.string(),
+  content: z.string().min(1),
+  parentId: z.string().optional(),
+});
