@@ -9,22 +9,24 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  userName      String?        @unique
-  grantEmail    String?
-  grantId       String?
-  accounts      Account[]
-  sessions      Session[]
-  Availability  Availability[]
-
-  Shop Shop[]
+  id               String             @id @default(cuid())
+  name             String?
+  email            String             @unique
+  emailVerified    DateTime?
+  image            String?
+  role             UserRole?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  userName         String?            @unique
+  grantEmail       String?
+  grantId          String?
+  accounts         Account[]
+  sessions         Session[]
+  Availability     Availability[]
+  Shop             Shop[]
+  bookings         Booking[]          @relation("CustomerBookings")
+  comments         Comment[]
+  TimeSlotTemplate TimeSlotTemplate[]
 }
 
 model Account {
@@ -74,6 +76,72 @@ model Availability {
   User      User[]
 }
 
+model TimeSlotTemplate {
+  id         String   @id @default(cuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id])
+  year       Int
+  month      Int
+  slotCount  Int
+  slotLength Int // in minutes
+  breaks     String[] // e.g. ["00:00-08:00", "12:00-13:00", "22:00-23:59"]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Shop {
+  id       String    @id @default(cuid())
+  name     String
+  ownerId  String
+  owner    User      @relation(fields: [ownerId], references: [id])
+  products Product[]
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  shopId      String
+  shop        Shop      @relation(fields: [shopId], references: [id])
+  bookings    Booking[]
+  comments    Comment[]
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  customer   User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  customerId String
+  product    Product       @relation(fields: [productId], references: [id])
+  productId  String
+  startTime  DateTime
+  endTime    DateTime
+  status     BookingStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  productId String
+  product   Product   @relation(fields: [productId], references: [id])
+  content   String
+  parentId  String? // for replies
+  replies   Comment[] @relation("CommentReplies")
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  createdAt DateTime  @default(now())
+}
+
 enum UserRole {
   CUSTOMER
   BUSINESS_OWNER
@@ -88,21 +156,3 @@ enum Day {
   Saturday
   Sunday
 }
-model Shop {
-  id        String   @id @default(cuid())
-  name      String
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
-  products  Product[]
-}
-
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  imageUrl    String?
-  shopId      String
-  shop        Shop     @relation(fields: [shopId], references: [id])
-}
-
