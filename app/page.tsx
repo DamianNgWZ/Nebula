@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { NavBar } from "./components/NavBar";
 import { auth } from "./lib/auth";
 import { redirect } from "next/navigation";
