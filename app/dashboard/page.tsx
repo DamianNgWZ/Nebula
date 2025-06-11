@@ -1,11 +1,12 @@
+import { redirect } from "next/navigation";
 import { isLoggedIn } from "../lib/hooks";
 
 export default async function DashboardPage() {
   const session = await isLoggedIn();
 
-  return (
-    <div>
-      <h1>Dashboard</h1>
-    </div>
-  );
+  if (session.user.role === "BUSINESS_OWNER") {
+    return redirect("/dashboard/business");
+  }
+
+  return redirect("/dashboard/customer");
 }

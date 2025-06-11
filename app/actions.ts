@@ -37,41 +37,41 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
       Availability: {
         create: [
           {
-              day: "Monday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Tuesday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Wednesday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Thursday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Friday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Saturday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-            {
-              day: "Sunday",
-              fromTime: "08:00",
-              tillTime: "18:00",
-            },
-        ]
+            day: "Monday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Tuesday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Wednesday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Thursday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Friday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Saturday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+          {
+            day: "Sunday",
+            fromTime: "08:00",
+            tillTime: "18:00",
+          },
+        ],
       },
       role: submission.value.role,
     },
@@ -81,7 +81,7 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
 
 export async function SettingsAction(prevState: any, formData: FormData) {
   const session = await isLoggedIn();
-  const submission = parseWithZod(formData, {
+  const submission = await parseWithZod(formData, {
     schema: settingsScheme,
   });
 
