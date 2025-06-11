@@ -73,16 +73,45 @@ export function onBoardingSchemaValidation(options?: {
 export const settingsScheme = z.object({
   fullName: z.string().min(3).max(150),
   profileImage: z.string(),
-})
+});
+
+export const shopSchema = z.object({
+  name: z
+    .string({
+      required_error: "Shop name is required",
+    })
+    .min(2, { message: "Shop name must be at least 2 characters" })
+    .max(100, { message: "Shop name must be less than 100 characters" }),
+});
 
 export const productSchema = z.object({
-  name: z.string().min(2, "Product name must be at least 2 characters"),
-  description: z.string().optional(),
-  price: z
+  name: z
+    .string({
+      required_error: "Product name is required",
+    })
+    .min(2, { message: "Product name must be at least 2 characters" }),
+
+  description: z
     .string()
-    .refine(val => !isNaN(Number(val)), "Must be a number")
+    .max(500, { message: "Description must be under 500 characters" })
+    .optional()
+    .or(z.literal("")),
+
+  price: z
+    .string({
+      required_error: "Price is required",
+    })
+    .min(1, { message: "Price is required" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Price must be a valid positive number",
+    })
     .transform(Number),
-  imageUrl: z.string().url("Must be a valid URL").optional(),
+
+  imageUrl: z
+    .string()
+    .url({ message: "Must be a valid URL" })
+    .optional()
+    .or(z.literal("")),
 });
 
 export const createBookingSchema = z.object({
