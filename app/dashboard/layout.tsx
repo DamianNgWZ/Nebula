@@ -25,6 +25,8 @@ import prisma from "../lib/db";
 import { redirect } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 
+const DEFAULT_AVATAR = "/defaultAvatar.png";
+
 async function getData(userId: string) {
   //onboaridng redirection
   const data = await prisma.user.findUnique({
@@ -33,7 +35,7 @@ async function getData(userId: string) {
     },
     select: {
       userName: true,
-      grantId: true
+      grantId: true,
     },
   });
 
@@ -44,7 +46,7 @@ async function getData(userId: string) {
   if (!data.grantId) {
     return redirect("/onboarding/grant-id");
   }
-  
+
   return data;
 }
 
@@ -122,7 +124,7 @@ export default async function DashboardLayout({
                     className="rounded-full"
                   >
                     <img
-                      src={session?.user?.image as string}
+                      src={session?.user?.image || DEFAULT_AVATAR}
                       alt="Profile Image"
                       width={20}
                       height={20}
@@ -157,7 +159,7 @@ export default async function DashboardLayout({
           </main>
         </div>
       </div>
-      <Toaster richColors closeButton/>
+      <Toaster richColors closeButton />
     </>
   );
 }
