@@ -34,7 +34,7 @@ export async function OnBoardingAction(prevState: any, formData: FormData) {
     data: {
       userName: submission.value.userName,
       name: submission.value.fullName,
-      availability: {
+      Availability: {
         create: [
           {
               day: "Monday",
