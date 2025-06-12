@@ -41,7 +41,17 @@ export async function POST(req: Request) {
 
 export async function GET() {
   const products = await prisma.product.findMany({
-    include: { shop: true },
+    include: {
+      shop: {
+        include: {
+          owner: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   return NextResponse.json(products);

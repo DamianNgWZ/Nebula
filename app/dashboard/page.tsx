@@ -8,5 +8,5 @@ export default async function DashboardPage() {
     return redirect("/dashboard/business");
   }
 
-  return redirect("/dashboard/customer");
+  return redirect("/dashboard/customer/browse");
 }
