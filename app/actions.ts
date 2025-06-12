@@ -151,12 +151,23 @@ export async function CreateShopAction(prevState: any, formData: FormData) {
     return submission.reply();
   }
 
-  // check if shop already exists
-  const existingShop = await prisma.shop.findFirst({
-    where: { ownerId: session.user?.id },
+  // check if the shop already existed beforehadn
+  const existingShop = await prisma.shop.findUnique({
+    where: { name: submission.value.name },
   });
 
   if (existingShop) {
+    return submission.reply({
+      formErrors: ["The shop name is already taken. Please choose another name."], 
+    });
+  }
+
+  // check if user already has a shop
+  const userShop = await prisma.shop.findFirst({
+    where: { ownerId: session.user?.id },
+  });
+
+  if (userShop) {
     return submission.reply({
       formErrors: ["You already have a shop created."],
     });

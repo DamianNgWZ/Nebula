@@ -82,6 +82,7 @@ export async function isShopNameUnique(shopName: string): Promise<boolean> {
       name: shopName,
     },
   });
+
   return !existingShop;
 }
 
@@ -91,7 +92,10 @@ export const shopSchema = z.object({
       required_error: "Shop name is required",
     })
     .min(2, { message: "Shop name must be at least 2 characters" })
-    .max(100, { message: "Shop name must be less than 100 characters" }),
+    .max(100, { message: "Shop name must be less than 100 characters" })
+    .refine(async (shopName) => await isShopNameUnique(shopName), {
+      message: "Shop already exists",
+    }),
 });
 
 export const productSchema = z.object({
