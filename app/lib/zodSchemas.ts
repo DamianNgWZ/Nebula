@@ -1,5 +1,6 @@
 import { conformZodMessage } from "@conform-to/zod";
 import { z } from "zod";
+import prisma from "./db";
 
 export const zodSchema = z.object({
   fullName: z
@@ -74,6 +75,15 @@ export const settingsScheme = z.object({
   fullName: z.string().min(3).max(150),
   profileImage: z.string(),
 });
+
+export async function isShopNameUnique(shopName: string): Promise<boolean> {
+  const existingShop = await prisma.shop.findUnique({
+    where: {
+      name: shopName,
+    },
+  });
+  return !existingShop;
+}
 
 export const shopSchema = z.object({
   name: z
