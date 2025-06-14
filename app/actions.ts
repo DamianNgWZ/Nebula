@@ -9,7 +9,7 @@ import {
   onBoardingSchemaValidation,
   settingsScheme,
   productSchema,
-  shopSchema,
+  shopSchemaValidation,
 } from "./lib/zodSchemas";
 import { redirect } from "next/navigation";
 
@@ -143,20 +143,29 @@ export async function CreateProductAction(prevState: any, formData: FormData) {
 export async function CreateShopAction(prevState: any, formData: FormData) {
   const session = await isLoggedIn();
 
-  const submission = parseWithZod(formData, {
-    schema: shopSchema,
+  const submission = await parseWithZod(formData, {
+    schema: shopSchemaValidation({
+      isShopNameUnique: async () => {
+        const existingShop = await prisma.shop.findUnique({
+          where: {
+            name: formData.get("name") as string,
+          },
+        });
+        return !existingShop;
+      },
+    }),
+    async: true,
   });
 
   if (submission.status !== "success") {
     return submission.reply();
   }
 
-  // check if shop already exists
-  const existingShop = await prisma.shop.findFirst({
+  const userShop = await prisma.shop.findFirst({
     where: { ownerId: session.user?.id },
   });
 
-  if (existingShop) {
+  if (userShop) {
     return submission.reply({
       formErrors: ["You already have a shop created."],
     });
