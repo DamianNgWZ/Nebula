@@ -1,17 +1,30 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 import { useForm } from "@conform-to/react";
 import { useActionState } from "react";
 import { parseWithZod } from "@conform-to/zod";
-import { CreateProductAction } from "@/app/actions";
+import { CreateProductAction, DeleteProductAction } from "@/app/actions";
 import { productSchema } from "@/app/lib/zodSchemas";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/app/components/SubmitButtons";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 import { Product } from "@prisma/client";
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -19,6 +32,10 @@ type ProductFormData = z.infer<typeof productSchema>;
 export default function BusinessDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [lastResult, action] = useActionState(CreateProductAction, undefined);
+  const [deleteResult, deleteAction] = useActionState(
+    DeleteProductAction,
+    undefined
+  );
 
   const [form, fields] = useForm<ProductFormData>({
     id: "product-form",
@@ -56,9 +73,24 @@ export default function BusinessDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResult]);
 
+  useEffect(() => {
+    if (deleteResult?.status === "success") {
+      fetchProducts();
+    }
+  }, [deleteResult]);
+
   return (
     <div className="p-6 space-y-10">
       <h1 className="text-2xl font-bold">My Products</h1>
+
+      {/* delete errors */}
+      {deleteResult?.status === "error" && deleteResult.error && (
+        <div className="text-sm text-red-500 p-3 bg-red-50 rounded-md">
+          {deleteResult.error._form && (
+            <p>{deleteResult.error._form.join(", ")}</p>
+          )}
+        </div>
+      )}
 
       <ul className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
@@ -78,10 +110,46 @@ export default function BusinessDashboard() {
                 className="w-full rounded"
               />
             )}
+
+            {/* delete button with confirmation */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="w-full mt-2">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Product
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="!fixed !top-1/2 !left-1/2 !transform !-translate-x-1/2 !-translate-y-1/2 !z-[9999] !m-0">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you SURE?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the product &quot;{product.name}&quot; and remove it from
+                    your shop.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      startTransition(() => {
+                        const formData = new FormData();
+                        formData.append("productId", product.id);
+                        deleteAction(formData);
+                      });
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Product
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </li>
         ))}
       </ul>
 
+      {/* product form */}
       <Card className="max-w-md">
         <CardHeader>
           <CardTitle className="text-xl">Create New Product</CardTitle>
