@@ -40,7 +40,25 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  const session = await isLoggedIn();
+  if (!session || !session.user?.id) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  // find own shop
+  const shop = await prisma.shop.findFirst({
+    where: { ownerId: session.user.id },
+  });
+
+  if (!shop) {
+    return NextResponse.json([]);
+  }
+
+  // get own product
   const products = await prisma.product.findMany({
+    where: {
+      shopId: shop.id,
+    },
     include: {
       shop: {
         include: {
