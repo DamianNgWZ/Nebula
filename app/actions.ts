@@ -10,6 +10,7 @@ import {
   settingsScheme,
   productSchema,
   shopSchemaValidation,
+  createBookingSchema,
 } from "./lib/zodSchemas";
 import { redirect } from "next/navigation";
 
@@ -230,5 +231,54 @@ export async function DeleteProductAction(prevState: any, formData: FormData) {
       status: "error",
       error: { _form: ["Failed to delete product"] },
     };
+  }
+}
+
+export async function CreateBookingAction(prevState: any, formData: FormData) {
+  const session = await isLoggedIn();
+  if (!session || !session.user?.id) {
+    return {
+      status: "error" as const,
+      error: { _form: ["Please log in to book services"] },
+    };
+  }
+
+  const submission = parseWithZod(formData, { schema: createBookingSchema });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  const { productId, startTime, endTime } = submission.value;
+
+  try {
+    // see if product exist
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { shop: true },
+    });
+
+    if (!product) {
+      return submission.reply({
+        formErrors: ["Service not found"],
+      });
+    }
+
+    // actual booking action
+    await prisma.booking.create({
+      data: {
+        customerId: session.user.id,
+        productId: productId,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        status: "PENDING",
+      },
+    });
+
+    return redirect("/dashboard/customer/bookings");
+  } catch (error) {
+    return submission.reply({
+      formErrors: ["Failed to create booking. Please try again."],
+    });
   }
 }

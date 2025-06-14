@@ -9,3 +9,11 @@ export type ShopWithDetails = Shop & {
     products: number;
   };
 };
+
+export type ProductWithShop = Product & {
+  shop: Shop & {
+    owner: {
+      name: string;
+    };
+  };
+};

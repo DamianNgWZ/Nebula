@@ -25,3 +25,58 @@ export async function POST(req: Request) {
 
   return NextResponse.json(template);
 }
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get("date");
+    const productId = params.id;
+
+    if (!date) {
+      return NextResponse.json(
+        { error: "Date parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingBookings = await prisma.booking.findMany({
+      where: {
+        productId: productId,
+        startTime: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        status: {
+          in: ["PENDING", "CONFIRMED"],
+        },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+    });
+
+    const bookedSlots = existingBookings.map((booking) => {
+      const start = booking.startTime.toTimeString().slice(0, 5);
+      const end = booking.endTime.toTimeString().slice(0, 5);
+      return `${start}-${end}`;
+    });
+
+    return NextResponse.json({ bookedSlots });
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    return NextResponse.json(
+      { error: "Failed to check availability" },
+      { status: 500 }
+    );
+  }
+}

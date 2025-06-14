@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShopWithDetails } from "@/types/product";
+import Link from "next/link";
 
 export default function CustomerBrowse() {
   const [shops, setShops] = useState<ShopWithDetails[]>([]);
@@ -144,14 +145,9 @@ export default function CustomerBrowse() {
                   </div>
                 )}
 
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    window.location.href = `/dashboard/customer/shop/${shop.id}`;
-                  }}
-                >
-                  View Services
-                </Button>
+                <Link href={`/dashboard/customer/shop/${shop.id}`}>
+                  <Button className="w-full">View Services</Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

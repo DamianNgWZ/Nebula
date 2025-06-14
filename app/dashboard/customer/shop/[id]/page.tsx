@@ -131,14 +131,9 @@ export default function ShopDetail() {
                       ${product.price}
                     </div>
 
-                    <Button
-                      onClick={() => {
-                        // to do next: nav to booking..
-                        console.log("Book service:", product.id);
-                      }}
-                    >
-                      Book Now
-                    </Button>
+                    <Link href={`/dashboard/customer/book/${product.id}`}>
+                      <Button>Book Now</Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

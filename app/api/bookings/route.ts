@@ -44,3 +44,44 @@ export async function POST(req: Request) {
 
   return NextResponse.json(booking);
 }
+
+export async function GET() {
+  try {
+    const session = await isLoggedIn();
+    if (!session || !session.user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        customerId: session.user.id,
+      },
+      include: {
+        product: {
+          include: {
+            shop: {
+              include: {
+                owner: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        startTime: 'desc',
+      },
+    });
+
+    return NextResponse.json(bookings);
+  } catch (error) {
+    console.error("Error fetching customer bookings:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch bookings" },
+      { status: 500 }
+    );
+  }
+}

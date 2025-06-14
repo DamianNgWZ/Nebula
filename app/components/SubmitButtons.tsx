@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface SubmitButtonProps {
   text: string;
-
+  disabled?: boolean;
   variant?:
     | "link"
     | "default"
