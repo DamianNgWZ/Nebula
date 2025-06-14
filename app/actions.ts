@@ -180,3 +180,55 @@ export async function CreateShopAction(prevState: any, formData: FormData) {
 
   return redirect("/dashboard/business");
 }
+
+export async function DeleteProductAction(prevState: any, formData: FormData) {
+  const session = await isLoggedIn();
+  if (!session || !session.user?.id) {
+    return {
+      status: "error",
+      error: { _form: ["Unauthorized"] },
+    };
+  }
+
+  const productId = formData.get("productId") as string;
+
+  if (!productId) {
+    return {
+      status: "error",
+      error: { _form: ["Product ID is required"] },
+    };
+  }
+
+  try {
+    // logic check to see if product belongs to owner
+    const product = await prisma.product.findFirst({
+      where: {
+        id: productId,
+        shop: {
+          ownerId: session.user.id,
+        },
+      },
+    });
+
+    if (!product) {
+      return {
+        status: "error",
+        error: { _form: ["Product not found or unauthorized"] },
+      };
+    }
+
+    // actual deletion
+    await prisma.product.delete({
+      where: {
+        id: productId,
+      },
+    });
+
+    return { status: "success" };
+  } catch (error) {
+    return {
+      status: "error",
+      error: { _form: ["Failed to delete product"] },
+    };
+  }
+}
