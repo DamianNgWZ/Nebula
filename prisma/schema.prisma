@@ -17,16 +17,16 @@ model User {
   role             UserRole?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
-  userName         String?            @unique
   grantEmail       String?
   grantId          String?
+  userName         String?            @unique
   accounts         Account[]
-  sessions         Session[]
-  Availability     Availability[]
-  Shop             Shop[]
   bookings         Booking[]          @relation("CustomerBookings")
   comments         Comment[]
+  sessions         Session[]
+  Shop             Shop[]
   TimeSlotTemplate TimeSlotTemplate[]
+  Availability     Availability[]     @relation("AvailabilityToUser")
 }
 
 model Account {
@@ -73,28 +73,28 @@ model Availability {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User[]
+  User      User[]   @relation("AvailabilityToUser")
 }
 
 model TimeSlotTemplate {
   id         String   @id @default(cuid())
   ownerId    String
-  owner      User     @relation(fields: [ownerId], references: [id])
   year       Int
   month      Int
   slotCount  Int
-  slotLength Int // in minutes
-  breaks     String[] // e.g. ["00:00-08:00", "12:00-13:00", "22:00-23:59"]
+  slotLength Int
+  breaks     String[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  owner      User     @relation(fields: [ownerId], references: [id])
 }
 
 model Shop {
   id       String    @id @default(cuid())
-  name     String
+  name     String    @unique
   ownerId  String
-  owner    User      @relation(fields: [ownerId], references: [id])
   products Product[]
+  owner    User      @relation(fields: [ownerId], references: [id])
 }
 
 model Product {
@@ -104,22 +104,35 @@ model Product {
   price       Float
   imageUrl    String?
   shopId      String
-  shop        Shop      @relation(fields: [shopId], references: [id])
   bookings    Booking[]
   comments    Comment[]
+  shop        Shop      @relation(fields: [shopId], references: [id])
 }
 
 model Booking {
   id         String        @id @default(cuid())
-  customer   User          @relation("CustomerBookings", fields: [customerId], references: [id])
   customerId String
-  product    Product       @relation(fields: [productId], references: [id])
   productId  String
   startTime  DateTime
   endTime    DateTime
   status     BookingStatus @default(PENDING)
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+  customer   User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  product    Product       @relation(fields: [productId], references: [id])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  userId    String
+  productId String
+  content   String
+  parentId  String?
+  createdAt DateTime  @default(now())
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  product   Product   @relation(fields: [productId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 }
 
 enum BookingStatus {
@@ -127,19 +140,6 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
-}
-
-model Comment {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  productId String
-  product   Product   @relation(fields: [productId], references: [id])
-  content   String
-  parentId  String? // for replies
-  replies   Comment[] @relation("CommentReplies")
-  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  createdAt DateTime  @default(now())
 }
 
 enum UserRole {

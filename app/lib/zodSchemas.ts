@@ -75,6 +75,27 @@ export const settingsScheme = z.object({
   profileImage: z.string(),
 });
 
+export const shopSchemaValidation = (context: {
+  isShopNameUnique: () => Promise<boolean>;
+}) =>
+  z.object({
+    name: z
+      .string({
+        required_error: "Shop name is required",
+      })
+      .min(2, { message: "Shop name must be at least 2 characters" })
+      .max(100, { message: "Shop name must be less than 100 characters" })
+      .superRefine(async (name, ctx) => {
+        const isUnique = await context.isShopNameUnique();
+        if (!isUnique) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Shop name is already taken",
+          });
+        }
+      }),
+  });
+
 export const shopSchema = z.object({
   name: z
     .string({
