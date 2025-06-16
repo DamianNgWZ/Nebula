@@ -71,10 +71,27 @@ export async function PATCH(
       // Create calendar event for business owner
       if (booking.product.shop.owner.grantId) {
         try {
+          // Get owner's calendars dynamically
+          const ownerCalendars = await nylas.calendars.list({
+            identifier: booking.product.shop.owner.grantId,
+          });
+
+          // Find the primary writable calendar
+          const ownerPrimaryCalendar = ownerCalendars.data.find(
+            (cal) => cal.isPrimary && !cal.readOnly && cal.isOwnedByUser
+          );
+
+          const ownerWritableCalendar = ownerCalendars.data.find(
+            (cal) => !cal.readOnly && cal.isOwnedByUser
+          );
+
+          const ownerCalendarId =
+            ownerPrimaryCalendar?.id || ownerWritableCalendar?.id || "primary";
+
           const ownerEvent = await nylas.events.create({
             identifier: booking.product.shop.owner.grantId,
             queryParams: {
-              calendarId: "damianng88@gmail.com",
+              calendarId: ownerCalendarId, // Dynamic calendar ID
             },
             requestBody: {
               title: `${booking.product.name} - ${booking.customer.name || "Customer"}`,
@@ -106,10 +123,29 @@ export async function PATCH(
       // Create calendar event for customer (if they have connected calendar)
       if (booking.customer.grantId) {
         try {
+          // Get customer's calendars dynamically
+          const customerCalendars = await nylas.calendars.list({
+            identifier: booking.customer.grantId,
+          });
+
+          // Find the primary writable calendar
+          const customerPrimaryCalendar = customerCalendars.data.find(
+            (cal) => cal.isPrimary && !cal.readOnly && cal.isOwnedByUser
+          );
+
+          const customerWritableCalendar = customerCalendars.data.find(
+            (cal) => !cal.readOnly && cal.isOwnedByUser
+          );
+
+          const customerCalendarId =
+            customerPrimaryCalendar?.id ||
+            customerWritableCalendar?.id ||
+            "primary";
+
           const customerEvent = await nylas.events.create({
             identifier: booking.customer.grantId,
             queryParams: {
-              calendarId: "primary",
+              calendarId: customerCalendarId, // Dynamic calendar ID
             },
             requestBody: {
               title: `${booking.product.name} - ${booking.product.shop.name}`,
@@ -118,7 +154,6 @@ export async function PATCH(
                 startTime: Math.floor(booking.startTime.getTime() / 1000),
                 endTime: Math.floor(booking.endTime.getTime() / 1000),
               },
-              // Remove participants entirely to prevent duplicate events
               location: booking.product.shop.name,
               metadata: {
                 bookingId: bookingId,

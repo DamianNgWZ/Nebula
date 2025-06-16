@@ -39,10 +39,12 @@ export async function POST(req: Request) {
     const startTime = new Date(`${date}T${timeSlot.start}:00`);
     const endTime = new Date(`${date}T${timeSlot.end}:00`);
 
-    // Check for existing bookings that conflict with this time slot
+    // Check for existing bookings that conflict with this time slot (shop-level)
     const conflict = await prisma.booking.findFirst({
       where: {
-        productId,
+        product: {
+          shopId: product.shopId, // Check across all products in the shop
+        },
         status: {
           in: ["PENDING", "CONFIRMED"],
         },
