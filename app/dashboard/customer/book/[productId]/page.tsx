@@ -84,21 +84,12 @@ export default function BookService() {
       if (!date || !product) return;
 
       try {
-        console.log("Checking availability for:", { productId, date });
         const res = await fetch(
           `/api/availability?productId=${productId}&date=${date}`
         );
         if (res.ok) {
           const data = await res.json();
-          console.log("Availability response:", data);
-          console.log("Booked slots:", data.bookedSlots);
           setBookedSlots(data.bookedSlots || []);
-        } else {
-          console.error(
-            "Availability fetch failed:",
-            res.status,
-            res.statusText
-          );
         }
       } catch (error) {
         console.error("Error checking availability:", error);
