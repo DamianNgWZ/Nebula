@@ -5,31 +5,31 @@ import { isLoggedIn } from "@/app/lib/hooks";
 export async function GET() {
   try {
     const session = await isLoggedIn();
-    if (!session || !session.user?.id || session.user.role !== "BUSINESS_OWNER") {
+    if (
+      !session ||
+      !session.user?.id ||
+      session.user.role !== "BUSINESS_OWNER"
+    ) {
       return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const shop = await prisma.shop.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!shop) {
-      return NextResponse.json([]);
     }
 
     const bookings = await prisma.booking.findMany({
       where: {
         product: {
-          shopId: shop.id,
+          shop: {
+            ownerId: session.user.id,
+          },
         },
         status: {
-          in: ["PENDING", "CONFIRMED"],
+          not: "CANCELLED",
         },
       },
       include: {
         customer: {
           select: {
+            id: true,
             name: true,
+            email: true,
           },
         },
         product: {
@@ -41,7 +41,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        startTime: 'desc',
+        createdAt: "desc",
       },
     });
 
