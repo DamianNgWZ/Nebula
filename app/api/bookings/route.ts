@@ -55,6 +55,9 @@ export async function GET() {
     const bookings = await prisma.booking.findMany({
       where: {
         customerId: session.user.id,
+        status: {
+          not: "CANCELLED",
+        },
       },
       include: {
         product: {
@@ -72,7 +75,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        startTime: 'desc',
+        startTime: "desc",
       },
     });
 
