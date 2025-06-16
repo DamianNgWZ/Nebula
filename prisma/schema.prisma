@@ -9,25 +9,25 @@ datasource db {
 }
 
 model User {
-  id               String             @id @default(cuid())
-  name             String?
-  email            String             @unique
-  emailVerified    DateTime?
-  image            String?
-  role             UserRole?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  grantEmail       String?
-  grantId          String?
-  userName         String?            @unique
-  accounts         Account[]
-  bookings         Booking[]          @relation("CustomerBookings")
-  comments         Comment[]
-  sessions         Session[]
-  Shop             Shop[]
-  TimeSlotTemplate TimeSlotTemplate[]
-  Availability     Availability[]     @relation("AvailabilityToUser")
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  grantEmail    String?
+  grantId       String?
+  userName      String?   @unique
+  nylasGrantId  String?
+  accounts      Account[]
+  bookings      Booking[] @relation("CustomerBookings")
+  comments      Comment[]
+  sessions      Session[]
+  Shop          Shop[]
 }
+
 
 model Account {
   userId            String
@@ -65,36 +65,13 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-model Availability {
-  id        String   @id @default(uuid())
-  day       Day
-  fromTime  String
-  tillTime  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  User      User[]   @relation("AvailabilityToUser")
-}
-
-model TimeSlotTemplate {
-  id         String   @id @default(cuid())
-  ownerId    String
-  year       Int
-  month      Int
-  slotCount  Int
-  slotLength Int
-  breaks     String[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  owner      User     @relation(fields: [ownerId], references: [id])
-}
-
 model Shop {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  ownerId  String
-  products Product[]
-  owner    User      @relation(fields: [ownerId], references: [id])
+  id            String    @id @default(cuid())
+  name          String    @unique
+  ownerId       String
+  nylasConfigId String?
+  products      Product[]
+  owner         User      @relation(fields: [ownerId], references: [id])
 }
 
 model Product {
@@ -107,6 +84,25 @@ model Product {
   bookings    Booking[]
   comments    Comment[]
   shop        Shop      @relation(fields: [shopId], references: [id])
+}
+
+
+model Comment {
+  id        String    @id @default(cuid())
+  userId    String
+  productId String
+  content   String
+  parentId  String?
+  createdAt DateTime  @default(now())
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  product   Product   @relation(fields: [productId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+enum UserRole {
+  CUSTOMER
+  BUSINESS_OWNER
 }
 
 model Booking {
@@ -122,37 +118,9 @@ model Booking {
   product    Product       @relation(fields: [productId], references: [id])
 }
 
-model Comment {
-  id        String    @id @default(cuid())
-  userId    String
-  productId String
-  content   String
-  parentId  String?
-  createdAt DateTime  @default(now())
-  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  replies   Comment[] @relation("CommentReplies")
-  product   Product   @relation(fields: [productId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
-}
-
 enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
   COMPLETED
-}
-
-enum UserRole {
-  CUSTOMER
-  BUSINESS_OWNER
-}
-
-enum Day {
-  Monday
-  Tuesday
-  Wednesday
-  Thursday
-  Friday
-  Saturday
-  Sunday
 }

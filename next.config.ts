@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    NEXT_PUBLIC_NYLAS_CLIENT_ID: process.env.NYLAS_CLIENT_ID,
+  },
 };
 
 export default nextConfig;

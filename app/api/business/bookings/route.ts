@@ -23,7 +23,7 @@ export async function GET() {
           shopId: shop.id,
         },
         status: {
-          not: "CANCELLED",
+          in: ["PENDING", "CONFIRMED"],
         },
       },
       include: {

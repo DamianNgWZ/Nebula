@@ -1,50 +1,81 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { createBookingSchema } from "@/app/lib/zodSchemas";
 import { isLoggedIn } from "@/app/lib/hooks";
 
 export async function POST(req: Request) {
-  const session = await isLoggedIn();
-  if (!session || !session.user?.id)
-    return new NextResponse("Unauthorized", { status: 401 });
+  try {
+    const session = await isLoggedIn();
+    if (!session || !session.user?.id) {
+      console.log("Unauthorized booking attempt");
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
-  const body = await req.json();
-  const parsed = createBookingSchema.safeParse(body);
+    const body = await req.json();
+    console.log("Received booking data:", body);
 
-  if (!parsed.success) {
-    return new NextResponse(JSON.stringify(parsed.error), { status: 400 });
-  }
+    const { productId, date, timeSlot } = body;
 
-  const { productId, startTime, endTime } = parsed.data;
+    if (!productId || !date || !timeSlot) {
+      console.log("Missing required fields:", { productId, date, timeSlot });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
 
-  const conflict = await prisma.booking.findFirst({
-    where: {
-      productId,
-      OR: [
-        {
-          startTime: { lt: new Date(endTime) },
-          endTime: { gt: new Date(startTime) },
+    // Convert date and timeSlot to DateTime
+    const startTime = new Date(`${date}T${timeSlot.start}:00`);
+    const endTime = new Date(`${date}T${timeSlot.end}:00`);
+
+    console.log("Creating booking with times:", { startTime, endTime });
+
+    // Check for existing bookings that conflict with this time slot
+    const conflict = await prisma.booking.findFirst({
+      where: {
+        productId,
+        status: {
+          in: ["PENDING", "CONFIRMED"],
         },
-      ],
-    },
-  });
+        OR: [
+          {
+            startTime: { lt: endTime },
+            endTime: { gt: startTime },
+          },
+        ],
+      },
+    });
 
-  if (conflict) {
-    return new NextResponse("Time slot already booked", { status: 409 });
+    if (conflict) {
+      console.log("Booking conflict found:", conflict);
+      return NextResponse.json(
+        { error: "This time slot is already booked" },
+        { status: 409 }
+      );
+    }
+
+    const booking = await prisma.booking.create({
+      data: {
+        customerId: session.user.id,
+        productId,
+        startTime,
+        endTime,
+        status: "PENDING",
+      },
+    });
+
+    console.log("Booking created successfully:", booking);
+    return NextResponse.json(booking);
+  } catch (error) {
+    console.error("Error in booking API:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: "Failed to create booking", details: message },
+      { status: 500 }
+    );
   }
-
-  const booking = await prisma.booking.create({
-    data: {
-      customerId: session.user.id,
-      productId,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-    },
-  });
-
-  return NextResponse.json(booking);
 }
 
+// Keep your existing GET method for fetching customer bookings
 export async function GET() {
   try {
     const session = await isLoggedIn();
