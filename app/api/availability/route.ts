@@ -26,18 +26,15 @@ export async function POST(req: Request) {
   return NextResponse.json(template);
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
-    const productId = params.id;
+    const productId = searchParams.get("productId");
 
-    if (!date) {
+    if (!date || !productId) {
       return NextResponse.json(
-        { error: "Date parameter is required" },
+        { error: "Date and productId parameters are required" },
         { status: 400 }
       );
     }
