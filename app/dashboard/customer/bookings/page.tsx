@@ -48,6 +48,27 @@ export default function CustomerBookings() {
     fetchBookings();
   }, []);
 
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED" }),
+      });
+      if (res.ok) {
+        const updatedRes = await fetch("/api/bookings");
+        if (updatedRes.ok) {
+          const data = await updatedRes.json();
+          setBookings(data);
+        }
+      } else {
+        console.error("Failed to cancel booking");
+      }
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -151,7 +172,11 @@ export default function CustomerBookings() {
                     </span>
 
                     {booking.status === "PENDING" && (
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCancelBooking(booking.id)}
+                      >
                         Cancel Booking
                       </Button>
                     )}
