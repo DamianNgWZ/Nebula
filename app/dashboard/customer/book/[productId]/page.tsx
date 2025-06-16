@@ -1,24 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { useForm } from "@conform-to/react";
-import { useActionState } from "react";
-import { parseWithZod } from "@conform-to/zod";
-import { CreateBookingAction } from "@/app/actions";
-import { createBookingSchema } from "@/app/lib/zodSchemas";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
-import { SubmitButton } from "@/app/components/SubmitButtons";
+import { useEffect, useState } from "react";
 import { ProductWithShop } from "@/types/product";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  User,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
-import { z } from "zod";
-
-type BookingFormData = z.infer<typeof createBookingSchema>;
 
 export default function BookService() {
   const params = useParams();
@@ -30,44 +28,26 @@ export default function BookService() {
     start: string;
     end: string;
   } | null>(null);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [lastResult, action] = useActionState(CreateBookingAction, undefined);
-
-  // placeholder timeslot (to do: make customisable later)
-  const timeSlots = [
-    { start: "09:00", end: "10:00" },
-    { start: "10:00", end: "11:00" },
-    { start: "11:00", end: "12:00" },
-    { start: "13:00", end: "14:00" },
-    { start: "14:00", end: "15:00" },
-    { start: "15:00", end: "16:00" },
-    { start: "16:00", end: "17:00" },
-  ];
-
-  const [form, fields] = useForm<BookingFormData>({
-    id: "booking-form",
-    lastResult,
-    onValidate({ formData }) {
-      return parseWithZod(formData, { schema: createBookingSchema });
-    },
-    shouldValidate: "onBlur",
-    shouldRevalidate: "onInput",
-    defaultValue: {
-      productId: productId,
-      startTime: "",
-      endTime: "",
-    },
-  });
+  const [businessSettings, setBusinessSettings] = useState<any>(null);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [slotAvailability, setSlotAvailability] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
-    if (!productId) return;
-
     const fetchProduct = async () => {
       try {
         const res = await fetch(`/api/products/${productId}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
+
+          const configRes = await fetch(`/api/scheduler-config/${productId}`);
+          if (configRes.ok) {
+            const configData = await configRes.json();
+            setBusinessSettings(configData.settings);
+          }
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -79,67 +59,135 @@ export default function BookService() {
     fetchProduct();
   }, [productId]);
 
-  const checkAvailability = useCallback(
-    async (date: string) => {
-      if (!date || !product) return;
+  useEffect(() => {
+    if (!businessSettings || !selectedDate) return;
 
-      try {
-        const res = await fetch(
-          `/api/availability?productId=${productId}&date=${date}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setBookedSlots(data.bookedSlots || []);
-        }
-      } catch (error) {
-        console.error("Error checking availability:", error);
+    const generateTimeSlots = () => {
+      const slots = [];
+      const startTime = businessSettings.working_hours_start || "09:00";
+      const endTime = businessSettings.working_hours_end || "17:00";
+      const interval = businessSettings.interval_minutes || 60;
+      const duration = businessSettings.duration_minutes || 60;
+
+      const [startHour, startMin] = startTime.split(":").map(Number);
+      const [endHour, endMin] = endTime.split(":").map(Number);
+
+      let currentTime = startHour * 60 + startMin;
+      const endTimeMinutes = endHour * 60 + endMin;
+
+      while (currentTime + duration <= endTimeMinutes) {
+        const startHours = Math.floor(currentTime / 60);
+        const startMinutes = currentTime % 60;
+        const endTimeSlot = currentTime + duration;
+        const endHours = Math.floor(endTimeSlot / 60);
+        const endMinutesSlot = endTimeSlot % 60;
+
+        slots.push({
+          start: `${startHours.toString().padStart(2, "0")}:${startMinutes.toString().padStart(2, "0")}`,
+          end: `${endHours.toString().padStart(2, "0")}:${endMinutesSlot.toString().padStart(2, "0")}`,
+        });
+
+        currentTime += interval;
       }
-    },
-    [productId, product]
-  );
 
-  // Check availability when date changes
-  useEffect(() => {
-    if (selectedDate) {
-      checkAvailability(selectedDate);
-    }
-  }, [selectedDate, checkAvailability]);
+      setAvailableSlots(slots);
+    };
+
+    generateTimeSlots();
+  }, [businessSettings, selectedDate]);
 
   useEffect(() => {
-    if (lastResult && lastResult.status === "success") {
-      setTimeout(() => {
-        if (selectedDate) {
-          checkAvailability(selectedDate);
+    if (availableSlots.length === 0 || !selectedDate) return;
+
+    const checkSlotAvailability = async () => {
+      setCheckingAvailability(true);
+      const availability: { [key: string]: boolean } = {};
+
+      for (const slot of availableSlots) {
+        try {
+          const response = await fetch("/api/bookings/check-availability", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productId: productId,
+              date: selectedDate,
+              timeSlot: slot,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            availability[`${slot.start}-${slot.end}`] = data.available;
+          } else {
+            availability[`${slot.start}-${slot.end}`] = false;
+          }
+        } catch (error) {
+          availability[`${slot.start}-${slot.end}`] = false;
         }
-      }, 500);
-    }
-  }, [lastResult, selectedDate, checkAvailability]);
+      }
 
-  const handleTimeSlotSelect = (slot: { start: string; end: string }) => {
-    if (!selectedDate) return;
+      setSlotAvailability(availability);
+      setCheckingAvailability(false);
+    };
 
-    setSelectedTimeSlot(slot);
+    checkSlotAvailability();
+  }, [availableSlots, selectedDate, productId]);
 
-    const startDateTime = `${selectedDate}T${slot.start}:00`;
-    const endDateTime = `${selectedDate}T${slot.end}:00`;
+  const getSlotButtonVariant = (slot: { start: string; end: string }) => {
+    const slotKey = `${slot.start}-${slot.end}`;
+    const isSelected = selectedTimeSlot?.start === slot.start;
+    const isAvailable = slotAvailability[slotKey];
 
-    // Update form fields
-    const form = document.getElementById("booking-form") as HTMLFormElement;
-    const startInput = form?.querySelector(
-      'input[name="startTime"]'
-    ) as HTMLInputElement;
-    const endInput = form?.querySelector(
-      'input[name="endTime"]'
-    ) as HTMLInputElement;
-
-    if (startInput) startInput.value = startDateTime;
-    if (endInput) endInput.value = endDateTime;
+    if (isSelected) return "default";
+    if (isAvailable === false) return "secondary";
+    return "outline";
   };
 
-  // Reset selected time slot when date changes
-  useEffect(() => {
-    setSelectedTimeSlot(null);
-  }, [selectedDate]);
+  const isSlotDisabled = (slot: { start: string; end: string }) => {
+    const slotKey = `${slot.start}-${slot.end}`;
+    return slotAvailability[slotKey] === false;
+  };
+
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedTimeSlot || !product) return;
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: productId,
+          date: selectedDate,
+          timeSlot: selectedTimeSlot,
+        }),
+      });
+
+      if (response.ok) {
+        alert(
+          `Booking request sent!\n\nService: ${product.name}\nDate: ${selectedDate}\nTime: ${selectedTimeSlot.start} - ${selectedTimeSlot.end}\n\nThe business owner will confirm your booking.`
+        );
+
+        setSelectedDate("");
+        setSelectedTimeSlot(null);
+        setSlotAvailability({});
+      } else if (response.status === 409) {
+        const errorData = await response.json();
+        alert(
+          `Sorry! ${errorData.error}\n\nPlease select a different time slot.`
+        );
+        setSelectedTimeSlot(null);
+      } else {
+        throw new Error("Failed to create booking");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`Failed to create booking. Error: ${message}\n\nPlease try again.`);
+    }
+  };
 
   if (loading) {
     return (
@@ -159,7 +207,6 @@ export default function BookService() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* back button */}
       <Link href={`/dashboard/customer/shop/${product.shop.id}`}>
         <Button variant="ghost" className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -168,12 +215,11 @@ export default function BookService() {
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* product detail */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Booking Details
+              Service Details
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -196,129 +242,146 @@ export default function BookService() {
               </div>
             )}
 
-            <div>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Business Owner:</span>
-              <p className="mt-1">{product.shop.owner.name}</p>
+              <span>{product.shop.owner.name}</span>
             </div>
+
+            {businessSettings && (
+              <div className="bg-green-50 p-3 rounded-md">
+                <p className="text-sm text-green-800">
+                  <strong>Duration:</strong> {businessSettings.duration_minutes}{" "}
+                  minutes
+                  <br />
+                  <strong>Business Hours:</strong>{" "}
+                  {businessSettings.working_hours_start} -{" "}
+                  {businessSettings.working_hours_end}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* form to book */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Select Date & Time
+              Book Your Appointment
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* select dates here */}
-            <div className="flex flex-col gap-y-2">
-              <Label htmlFor="date-picker">Date</Label>
-              <Input
+            <div className="space-y-2">
+              <label htmlFor="date-picker" className="text-sm font-medium">
+                Select Date
+              </label>
+              <input
                 id="date-picker"
                 type="date"
                 min={new Date().toISOString().split("T")[0]}
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full p-2 border rounded-md"
               />
             </div>
 
-            {/* select slots here */}
-            {selectedDate && (
+            {selectedDate && availableSlots.length > 0 && (
               <div className="space-y-3">
-                <Label>Available Time Slots</Label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    Available Time Slots
+                  </label>
+                  {checkingAvailability && (
+                    <span className="text-xs text-muted-foreground">
+                      Checking availability...
+                    </span>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
-                  {timeSlots.map((slot, index) => {
+                  {availableSlots.map((slot, index) => {
                     const slotKey = `${slot.start}-${slot.end}`;
-                    const isBooked = bookedSlots.includes(slotKey);
+                    const isAvailable = slotAvailability[slotKey];
+                    const isDisabled = isSlotDisabled(slot);
 
                     return (
                       <Button
                         key={index}
-                        variant={
-                          isBooked
-                            ? "secondary"
-                            : selectedTimeSlot?.start === slot.start
-                              ? "default"
-                              : "outline"
-                        }
-                        className={`text-sm ${isBooked ? "opacity-50 cursor-not-allowed" : ""}`}
-                        onClick={() => !isBooked && handleTimeSlotSelect(slot)}
-                        disabled={isBooked}
+                        variant={getSlotButtonVariant(slot)}
+                        className={`text-sm relative ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                        disabled={isDisabled || checkingAvailability}
+                        onClick={() => !isDisabled && setSelectedTimeSlot(slot)}
                       >
-                        {slot.start} - {slot.end}
-                        {isBooked && " (Booked)"}
+                        <span>
+                          {slot.start} - {slot.end}
+                        </span>
+                        {!checkingAvailability && (
+                          <span className="ml-2">
+                            {isAvailable === false ? (
+                              <XCircle className="h-3 w-3 text-red-500" />
+                            ) : isAvailable === true ? (
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                            ) : null}
+                          </span>
+                        )}
                       </Button>
                     );
                   })}
                 </div>
-              </div>
-            )}
 
-            {/* Show selected time slot */}
-            {selectedTimeSlot && (
-              <div className="p-3 bg-green-50 rounded-md border border-green-200">
-                <p className="text-sm text-green-800">
-                  Selected: {selectedTimeSlot.start} - {selectedTimeSlot.end} on{" "}
-                  {selectedDate}
-                </p>
-              </div>
-            )}
-
-            {/* form booking */}
-            <form
-              id={form.id}
-              onSubmit={(e) => {
-                if (selectedTimeSlot) {
-                  const slotKey = `${selectedTimeSlot.start}-${selectedTimeSlot.end}`;
-                  setBookedSlots((prev) => {
-                    if (!prev.includes(slotKey)) {
-                      return [...prev, slotKey];
-                    }
-                    return prev;
-                  });
-                  setSelectedTimeSlot(null);
-                }
-                form.onSubmit(e);
-              }}
-              action={action}
-              noValidate
-              className="space-y-4"
-            >
-              {/* Hidden fields */}
-              <input type="hidden" name="productId" value={productId} />
-              <input
-                type="hidden"
-                name="startTime"
-                defaultValue={fields.startTime.initialValue}
-              />
-              <input
-                type="hidden"
-                name="endTime"
-                defaultValue={fields.endTime.initialValue}
-              />
-
-              {lastResult?.status === "error" && lastResult.error && (
-                <div className="text-sm text-red-500">
-                  {lastResult.error._form && (
-                    <p>{lastResult.error._form.join(", ")}</p>
-                  )}
-                  {lastResult.error.startTime && (
-                    <p>{lastResult.error.startTime.join(", ")}</p>
-                  )}
-                  {lastResult.error.endTime && (
-                    <p>{lastResult.error.endTime.join(", ")}</p>
-                  )}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                    <span>Available</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <XCircle className="h-3 w-3 text-red-500" />
+                    <span>Booked</span>
+                  </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              <SubmitButton
-                text="Book Service"
-                className="w-full"
-                disabled={!selectedDate || !selectedTimeSlot}
-              />
-            </form>
+            {selectedTimeSlot && selectedDate && (
+              <div className="p-4 bg-green-50 rounded-md border border-green-200">
+                <h4 className="font-medium text-green-800 mb-2">
+                  Booking Summary
+                </h4>
+                <div className="text-sm text-green-700 space-y-1">
+                  <p>
+                    <strong>Service:</strong> {product.name}
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {selectedDate}
+                  </p>
+                  <p>
+                    <strong>Time:</strong> {selectedTimeSlot.start} -{" "}
+                    {selectedTimeSlot.end}
+                  </p>
+                  <p>
+                    <strong>Price:</strong> ${product.price}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={handleBooking}
+              disabled={
+                !selectedDate || !selectedTimeSlot || checkingAvailability
+              }
+              className="w-full"
+              size="lg"
+            >
+              {checkingAvailability
+                ? "Checking availability..."
+                : "Request Booking"}
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Your booking request will be sent to {product.shop.owner.name} for
+              confirmation.
+            </p>
           </CardContent>
         </Card>
       </div>

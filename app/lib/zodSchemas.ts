@@ -135,16 +135,6 @@ export const productSchema = z.object({
     .or(z.literal("")),
 });
 
-export const createBookingSchema = z.object({
-  productId: z.string(),
-  startTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Invalid start time",
-  }),
-  endTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Invalid end time",
-  }),
-});
-
 export const createTimeSlotTemplateSchema = z.object({
   year: z.number().int().gte(2024),
   month: z.number().int().min(1).max(12),
