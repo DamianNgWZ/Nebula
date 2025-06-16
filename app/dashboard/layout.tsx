@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ReactNode } from "react";
 import Image from "next/image";
@@ -28,7 +30,7 @@ import { Toaster } from "@/components/ui/sonner";
 const DEFAULT_AVATAR = "/defaultAvatar.png";
 
 async function getData(userId: string) {
-  //onboaridng redirection
+  //onboarding redirection
   const data = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -57,6 +59,7 @@ export default async function DashboardLayout({
 }) {
   const session = await isLoggedIn();
   const data = await getData(session.user?.id as string);
+
   return (
     <>
       <div
@@ -85,7 +88,7 @@ export default async function DashboardLayout({
 
             <div className="flex-1">
               <nav className="grid items-start px-2 lg:px-4">
-                <DashboardLinks />
+                <DashboardLinks userRole={session.user.role} />
               </nav>
             </div>
           </div>
@@ -108,7 +111,7 @@ export default async function DashboardLayout({
 
               <SheetContent side="left" className="flex flex-col">
                 <nav className="grid gap-2 mt-10">
-                  <DashboardLinks />
+                  <DashboardLinks userRole={session.user.role} />
                 </nav>
               </SheetContent>
             </Sheet>

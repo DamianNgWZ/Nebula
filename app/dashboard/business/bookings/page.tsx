@@ -4,42 +4,38 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar, Clock, User, CheckCircle, XCircle } from "lucide-react";
 
-interface BookingWithDetails {
+interface BusinessBooking {
   id: string;
   startTime: string;
   endTime: string;
   status: string;
   createdAt: string;
+  customer: {
+    name: string;
+  };
   product: {
     id: string;
     name: string;
     price: number;
-    shop: {
-      id: string;
-      name: string;
-      owner: {
-        name: string;
-      };
-    };
   };
 }
 
-export default function CustomerBookings() {
-  const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
+export default function BusinessBookings() {
+  const [bookings, setBookings] = useState<BusinessBooking[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await fetch("/api/bookings");
+        const res = await fetch("/api/business/bookings");
         if (res.ok) {
           const data = await res.json();
           setBookings(data);
         }
       } catch (error) {
-        console.error("Error fetching bookings:", error);
+        console.error("Error fetching business bookings:", error);
       } finally {
         setLoading(false);
       }
@@ -48,24 +44,28 @@ export default function CustomerBookings() {
     fetchBookings();
   }, []);
 
-  const handleCancelBooking = async (bookingId: string) => {
+  const handleBookingAction = async (
+    bookingId: string,
+    action: "CONFIRMED" | "CANCELLED"
+  ) => {
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/business/bookings/${bookingId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED" }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: action }),
       });
+
       if (res.ok) {
-        const updatedRes = await fetch("/api/bookings");
+        const updatedRes = await fetch("/api/business/bookings");
         if (updatedRes.ok) {
           const data = await updatedRes.json();
           setBookings(data);
         }
-      } else {
-        console.error("Failed to cancel booking");
       }
     } catch (error) {
-      console.error("Error cancelling booking:", error);
+      console.error("Error updating booking:", error);
     }
   };
 
@@ -93,7 +93,7 @@ export default function CustomerBookings() {
   if (loading) {
     return (
       <div className="p-6">
-        <p>Loading your bookings...</p>
+        <p>Loading bookings...</p>
       </div>
     );
   }
@@ -101,9 +101,9 @@ export default function CustomerBookings() {
   return (
     <div className="p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">My Bookings</h1>
+        <h1 className="text-3xl font-bold">Booking Requests</h1>
         <p className="text-muted-foreground">
-          View and manage your service bookings
+          Manage your incoming service bookings
         </p>
       </div>
 
@@ -114,12 +114,10 @@ export default function CustomerBookings() {
             <div>
               <h3 className="text-lg font-semibold">No bookings yet</h3>
               <p className="text-muted-foreground">
-                Start browsing services to make your first booking!
+                Booking requests will appear here when customers book your
+                services.
               </p>
             </div>
-            <Button asChild>
-              <a href="/dashboard/customer/browse">Browse Services</a>
-            </Button>
           </div>
         </Card>
       ) : (
@@ -144,13 +142,8 @@ export default function CustomerBookings() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{booking.product.shop.name}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{booking.product.shop.owner.name}</span>
+                      <span>{booking.customer.name}</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm">
@@ -172,13 +165,30 @@ export default function CustomerBookings() {
                     </span>
 
                     {booking.status === "PENDING" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCancelBooking(booking.id)}
-                      >
-                        Cancel Booking
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleBookingAction(booking.id, "CONFIRMED")
+                          }
+                          className="text-green-600 hover:bg-green-50"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Accept
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleBookingAction(booking.id, "CANCELLED")
+                          }
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Decline
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </CardContent>

@@ -98,11 +98,22 @@ export default function BookService() {
     [productId, product]
   );
 
+  // Check availability when date changes
   useEffect(() => {
     if (selectedDate) {
       checkAvailability(selectedDate);
     }
   }, [selectedDate, checkAvailability]);
+
+  useEffect(() => {
+    if (lastResult && lastResult.status === "success") {
+      setTimeout(() => {
+        if (selectedDate) {
+          checkAvailability(selectedDate);
+        }
+      }, 500);
+    }
+  }, [lastResult, selectedDate, checkAvailability]);
 
   const handleTimeSlotSelect = (slot: { start: string; end: string }) => {
     if (!selectedDate) return;
@@ -112,6 +123,7 @@ export default function BookService() {
     const startDateTime = `${selectedDate}T${slot.start}:00`;
     const endDateTime = `${selectedDate}T${slot.end}:00`;
 
+    // Update form fields
     const form = document.getElementById("booking-form") as HTMLFormElement;
     const startInput = form?.querySelector(
       'input[name="startTime"]'
@@ -124,6 +136,7 @@ export default function BookService() {
     if (endInput) endInput.value = endDateTime;
   };
 
+  // Reset selected time slot when date changes
   useEffect(() => {
     setSelectedTimeSlot(null);
   }, [selectedDate]);
@@ -243,7 +256,7 @@ export default function BookService() {
               </div>
             )}
 
-            {/* timeslot select feedback */}
+            {/* Show selected time slot */}
             {selectedTimeSlot && (
               <div className="p-3 bg-green-50 rounded-md border border-green-200">
                 <p className="text-sm text-green-800">
@@ -257,11 +270,16 @@ export default function BookService() {
             <form
               id={form.id}
               onSubmit={(e) => {
-                console.log("Form submitting with:", {
-                  productId,
-                  selectedDate,
-                  selectedTimeSlot,
-                });
+                if (selectedTimeSlot) {
+                  const slotKey = `${selectedTimeSlot.start}-${selectedTimeSlot.end}`;
+                  setBookedSlots((prev) => {
+                    if (!prev.includes(slotKey)) {
+                      return [...prev, slotKey];
+                    }
+                    return prev;
+                  });
+                  setSelectedTimeSlot(null);
+                }
                 form.onSubmit(e);
               }}
               action={action}

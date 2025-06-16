@@ -5,8 +5,9 @@ import {
   CalendarCheck,
   LucideProps,
   Settings,
-  UsersRound,
   Wine,
+  ShoppingBag,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,23 +22,46 @@ interface NavProps {
   >;
 }
 
-export const dashboardLinks: NavProps[] = [
+// customer links for dashboard
+export const customerDashboardLinks: NavProps[] = [
   {
     id: 0,
-    name: "Events",
-    href: "/dashboard",
+    name: "My Bookings",
+    href: "/dashboard/customer/bookings",
     icon: Wine,
   },
   {
     id: 1,
-    name: "Meetings",
-    href: "/dashboard/meetings",
-    icon: UsersRound,
+    name: "Browse Services",
+    href: "/dashboard/customer/browse",
+    icon: ShoppingBag,
+  },
+  {
+    id: 2,
+    name: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+];
+
+// business owner links for dashboard
+export const businessDashboardLinks: NavProps[] = [
+  {
+    id: 0,
+    name: "Manage Bookings",
+    href: "/dashboard/business/bookings",
+    icon: Wine,
+  },
+  {
+    id: 1,
+    name: "My Products",
+    href: "/dashboard/business/products",
+    icon: Store,
   },
   {
     id: 2,
     name: "Availability",
-    href: "/dashboard/availability",
+    href: "/dashboard/business/availability",
     icon: CalendarCheck,
   },
   {
@@ -48,17 +72,26 @@ export const dashboardLinks: NavProps[] = [
   },
 ];
 
-export function DashboardLinks() {
+interface DashboardLinksProps {
+  userRole: "CUSTOMER" | "BUSINESS_OWNER";
+}
+
+export function DashboardLinks({ userRole }: DashboardLinksProps) {
   const pathname = usePathname();
+  const links =
+    userRole === "BUSINESS_OWNER"
+      ? businessDashboardLinks
+      : customerDashboardLinks;
+
   return (
     <>
-      {dashboardLinks.map((link) => (
+      {links.map((link) => (
         <Link
           className={cn(
             pathname === link.href
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground",
-            "flex items-center gap-4 rounded-lg px-3 py-2 transition-all hover:text-primary",
+            "flex items-center gap-4 rounded-lg px-3 py-2 transition-all hover:text-primary"
           )}
           key={link.id}
           href={link.href}
