@@ -89,17 +89,13 @@ model Comment {
   userId    String
   productId String
   content   String
+  rating    Int
   parentId  String?
   createdAt DateTime  @default(now())
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
   product   Product   @relation(fields: [productId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
-}
-
-enum UserRole {
-  CUSTOMER
-  BUSINESS_OWNER
 }
 
 model Booking {
@@ -109,12 +105,17 @@ model Booking {
   startTime            DateTime
   endTime              DateTime
   status               BookingStatus @default(PENDING)
-  nylasEventId         String? // Business owner's calendar event
-  customerNylasEventId String? // Track customer's calendar event
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
+  nylasEventId         String?
+  customerNylasEventId String?
   customer             User          @relation("CustomerBookings", fields: [customerId], references: [id])
   product              Product       @relation(fields: [productId], references: [id])
+}
+
+enum UserRole {
+  CUSTOMER
+  BUSINESS_OWNER
 }
 
 enum BookingStatus {
