@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import CommentsSection from "@/app/components/CommentsSection";
 
 export default function BookService() {
   const params = useParams();
@@ -385,6 +386,7 @@ export default function BookService() {
           </CardContent>
         </Card>
       </div>
+      <CommentsSection />
     </div>
   );
 }

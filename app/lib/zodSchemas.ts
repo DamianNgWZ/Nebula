@@ -147,4 +147,5 @@ export const createCommentSchema = z.object({
   productId: z.string(),
   content: z.string().min(1),
   parentId: z.string().optional(),
+  rating: z.number().min(1).max(5),
 });
