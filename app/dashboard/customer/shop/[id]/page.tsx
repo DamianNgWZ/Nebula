@@ -7,8 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Star } from "lucide-react";
-import { ShopWithDetails } from "@/types/product";
 import Link from "next/link";
+
+type ProductWithCommentCount = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  imageUrl: string | null;
+  _count: { comments: number };
+};
+
+type ShopWithDetails = {
+  id: string;
+  name: string;
+  owner: { name: string };
+  products: ProductWithCommentCount[];
+  totalReviews: number;
+  averageRating: number;
+};
 
 export default function ShopDetail() {
   const params = useParams();
@@ -74,17 +91,24 @@ export default function ShopDetail() {
 
         <div className="flex items-center gap-4">
           <Badge variant="secondary">
-            {shop._count.products} service
-            {shop._count.products !== 1 ? "s" : ""}
+            {shop.products.length} service
+            {shop.products.length !== 1 ? "s" : ""}
           </Badge>
 
-          {/* rating placeholder */}
+          {/* Dynamic rating and review count */}
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-muted stroke-muted" />
+              <Star
+                key={i}
+                className={`h-4 w-4 ${
+                  i < Math.round(shop.averageRating)
+                    ? "fill-yellow-400 stroke-yellow-400"
+                    : "fill-muted stroke-muted"
+                }`}
+              />
             ))}
             <span className="text-sm text-muted-foreground ml-1">
-              (0 reviews)
+              ({shop.totalReviews} review{shop.totalReviews !== 1 ? "s" : ""})
             </span>
           </div>
         </div>
