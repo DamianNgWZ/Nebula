@@ -89,7 +89,7 @@ model Comment {
   userId    String
   productId String
   content   String
-  rating    Int
+  rating    Int? // Nullable so that owner can reply without it being treated as a rating
   parentId  String?
   createdAt DateTime  @default(now())
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])

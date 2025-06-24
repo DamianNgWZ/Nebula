@@ -4,12 +4,13 @@ import prisma from "@/app/lib/db";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id: shopId } = params;
+  const { id: shopId } = await params;
 
-    // Fetch products with comment counts and ratings
+  try {
+    // ...rest of your code (unchanged)
+    // Fetch products with ONLY top-level comments (reviews)
     const shop = await prisma.shop.findUnique({
       where: { id: shopId },
       include: {
@@ -17,9 +18,16 @@ export async function GET(
         products: {
           include: {
             comments: {
+              where: { parentId: null }, // ONLY top-level comments
               select: { rating: true },
             },
-            _count: { select: { comments: true } },
+            _count: {
+              select: {
+                comments: {
+                  where: { parentId: null }, // Count ONLY top-level comments
+                },
+              },
+            },
           },
         },
       },
@@ -29,7 +37,7 @@ export async function GET(
       return NextResponse.json({ error: "Shop not found" }, { status: 404 });
     }
 
-    // Calculate total reviews and average rating
+    // Calculate total reviews and average rating (only from top-level comments)
     let totalReviews = 0;
     let totalRating = 0;
     let ratingCount = 0;
@@ -52,7 +60,7 @@ export async function GET(
       ...shop,
       products,
       totalReviews,
-      averageRating: Number(averageRating.toFixed(2)), // rounded to 2 decimals
+      averageRating: Number(averageRating.toFixed(2)),
     });
   } catch (error) {
     console.error("Error fetching shop:", error);

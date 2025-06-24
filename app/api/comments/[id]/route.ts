@@ -1,39 +1,48 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { isLoggedIn } from "@/app/lib/hooks";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } } // Changed to { id: string }
+  { params }: { params: { id: string } }
 ) {
+  const session = await isLoggedIn();
+  if (!session || !session.user?.id)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { content } = await req.json();
+
+  const comment = await prisma.comment.findUnique({
+    where: { id: params.id },
+  });
+  if (!comment || comment.userId !== session.user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const updated = await prisma.comment.update({
+    where: { id: params.id },
+    data: { content },
+  });
+
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await isLoggedIn();
+  if (!session || session.user?.role !== "BUSINESS_OWNER") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
-    const session = await isLoggedIn();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { content, rating } = await req.json();
-    const commentId = params.id;
-
-    // Ensure user owns comment
-    const comment = await prisma.comment.findUnique({
-      where: { id: commentId },
+    await prisma.comment.delete({
+      where: { id: params.id },
     });
-
-    if (!comment || comment.userId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const updated = await prisma.comment.update({
-      where: { id: commentId },
-      data: { content, rating },
-    });
-
-    return NextResponse.json(updated);
+    return NextResponse.json({ message: "Comment deleted" });
   } catch (error) {
-    console.error("Error updating comment:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to delete comment" },
       { status: 500 }
     );
   }

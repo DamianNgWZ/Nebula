@@ -9,8 +9,8 @@ type Comment = {
   id: string;
   content: string;
   createdAt: string;
-  rating: number;
-  parentId?: string;
+  rating: number | null;
+  parentId?: string | null;
   user: { name?: string; email: string };
   replies: Comment[];
 };
@@ -65,7 +65,7 @@ export default function CommentsSection() {
   function startEdit(comment: Comment) {
     setEditingId(comment.id);
     setEditContent(comment.content);
-    setEditRating(comment.rating);
+    setEditRating(comment.rating ?? 5);
   }
 
   async function saveEdit(commentId: string) {
@@ -105,7 +105,11 @@ export default function CommentsSection() {
         <div className="mb-6">
           <div className="mb-2 flex items-center gap-2">
             <label className="mr-2">Rating:</label>
-            <StarRating value={rating} onChange={setRating} disabled={loading} />
+            <StarRating
+              value={rating}
+              onChange={setRating}
+              disabled={loading}
+            />
           </div>
           <textarea
             value={content}
@@ -165,20 +169,32 @@ export default function CommentsSection() {
                   <p className="text-sm font-semibold">
                     {c.user?.name || c.user?.email}
                   </p>
-                  <StarRating value={c.rating} onChange={() => {}} disabled size={16} />
+                  {/* Only show stars for top-level comments with a valid rating */}
+                  {(!c.parentId || c.parentId === null) &&
+                    typeof c.rating === "number" &&
+                    c.rating >= 1 &&
+                    c.rating <= 5 && (
+                      <StarRating
+                        value={c.rating}
+                        onChange={() => {}}
+                        disabled
+                        size={16}
+                      />
+                    )}
                 </div>
                 <p className="text-gray-800">{c.content}</p>
                 <p className="text-xs text-gray-500">
                   {new Date(c.createdAt).toLocaleString()}
                 </p>
-                {session?.user?.email === c.user?.email && (
-                  <button
-                    className="text-xs text-blue-500 underline mt-2"
-                    onClick={() => startEdit(c)}
-                  >
-                    Edit
-                  </button>
-                )}
+                {session?.user?.email === c.user?.email &&
+                  (!c.parentId || c.parentId === null) && (
+                    <button
+                      className="text-xs text-blue-500 underline mt-2"
+                      onClick={() => startEdit(c)}
+                    >
+                      Edit
+                    </button>
+                  )}
               </>
             )}
             {/* Replies */}
@@ -190,7 +206,7 @@ export default function CommentsSection() {
                       <p className="text-sm font-semibold">
                         {r.user?.name || r.user?.email}
                       </p>
-                      <StarRating value={r.rating} onChange={() => {}} disabled size={14} />
+                      {/* Do NOT show stars for replies */}
                     </div>
                     <p>{r.content}</p>
                   </div>
