@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { isLoggedIn } from "@/app/lib/hooks";
@@ -34,6 +35,27 @@ export async function PATCH(
     console.error("Error updating comment:", error);
     return NextResponse.json(
       { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await isLoggedIn();
+  if (!session || session.user?.role !== "BUSINESS_OWNER") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    await prisma.comment.delete({
+      where: { id: params.id },
+    });
+    return NextResponse.json({ message: "Comment deleted" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete comment" },
       { status: 500 }
     );
   }

@@ -24,8 +24,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { Product } from "@prisma/client";
+import EditProductForm from "@/app/components/EditProductForm";
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -36,6 +37,8 @@ export default function BusinessDashboard() {
     DeleteProductAction,
     undefined
   );
+
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [form, fields] = useForm<ProductFormData>({
     id: "product-form",
@@ -96,9 +99,19 @@ export default function BusinessDashboard() {
         {products.map((product) => (
           <li
             key={product.id}
-            className="border p-4 rounded-xl shadow-sm space-y-2"
+            className="border p-4 rounded-xl shadow-sm space-y-2 relative"
           >
-            <h2 className="text-lg font-semibold">{product.name}</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{product.name}</h2>
+              {/* Edit icon */}
+              <button
+                className="text-blue-500 hover:text-blue-700"
+                onClick={() => setEditingProduct(product)}
+                aria-label="Edit Product"
+              >
+                <Pencil className="h-5 w-5" />
+              </button>
+            </div>
             <p className="text-sm text-muted-foreground">
               {product.description || "No description"}
             </p>
@@ -148,6 +161,42 @@ export default function BusinessDashboard() {
           </li>
         ))}
       </ul>
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+          style={{
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            position: "fixed",
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 9999,
+          }}
+        >
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+            {/* ↑ Change rounded to rounded-xl for more pronounced rounding */}
+            <h2 className="text-xl mb-3">Edit Product</h2>
+            <EditProductForm
+              product={editingProduct}
+              onSave={async () => {
+                setEditingProduct(null);
+                await fetchProducts();
+              }}
+            />
+            <button
+              onClick={() => setEditingProduct(null)}
+              className="mt-4 text-gray-500 underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* product form */}
       <Card className="max-w-md">
