@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProductWithShop } from "@/types/product";
@@ -19,18 +18,19 @@ import {
 import Link from "next/link";
 import CommentsSection from "@/app/components/CommentsSection";
 
+type TimeSlot = { start: string; end: string };
+
 export default function BookService() {
   const params = useParams();
   const productId = params.productId as string;
   const [product, setProduct] = useState<ProductWithShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
-    start: string;
-    end: string;
-  } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
+    null
+  );
   const [businessSettings, setBusinessSettings] = useState<any>(null);
-  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [slotAvailability, setSlotAvailability] = useState<{
     [key: string]: boolean;
   }>({});
@@ -61,40 +61,19 @@ export default function BookService() {
   }, [productId]);
 
   useEffect(() => {
-    if (!businessSettings || !selectedDate) return;
+    if (!businessSettings || !selectedDate) {
+      setAvailableSlots([]);
+      return;
+    }
 
-    const generateTimeSlots = () => {
-      const slots = [];
-      const startTime = businessSettings.working_hours_start || "09:00";
-      const endTime = businessSettings.working_hours_end || "17:00";
-      const interval = businessSettings.interval_minutes || 60;
-      const duration = businessSettings.duration_minutes || 60;
+    const dayOfWeek: string = new Date(selectedDate).toLocaleDateString(
+      "en-US",
+      { weekday: "long" }
+    );
 
-      const [startHour, startMin] = startTime.split(":").map(Number);
-      const [endHour, endMin] = endTime.split(":").map(Number);
-
-      let currentTime = startHour * 60 + startMin;
-      const endTimeMinutes = endHour * 60 + endMin;
-
-      while (currentTime + duration <= endTimeMinutes) {
-        const startHours = Math.floor(currentTime / 60);
-        const startMinutes = currentTime % 60;
-        const endTimeSlot = currentTime + duration;
-        const endHours = Math.floor(endTimeSlot / 60);
-        const endMinutesSlot = endTimeSlot % 60;
-
-        slots.push({
-          start: `${startHours.toString().padStart(2, "0")}:${startMinutes.toString().padStart(2, "0")}`,
-          end: `${endHours.toString().padStart(2, "0")}:${endMinutesSlot.toString().padStart(2, "0")}`,
-        });
-
-        currentTime += interval;
-      }
-
-      setAvailableSlots(slots);
-    };
-
-    generateTimeSlots();
+    // Use the slots as defined in settings, do NOT generate by interval
+    const daySlots: TimeSlot[] = businessSettings.days?.[dayOfWeek] || [];
+    setAvailableSlots(daySlots);
   }, [businessSettings, selectedDate]);
 
   useEffect(() => {
@@ -117,7 +96,6 @@ export default function BookService() {
               timeSlot: slot,
             }),
           });
-
           if (response.ok) {
             const data = await response.json();
             availability[`${slot.start}-${slot.end}`] = data.available;
@@ -136,7 +114,7 @@ export default function BookService() {
     checkSlotAvailability();
   }, [availableSlots, selectedDate, productId]);
 
-  const getSlotButtonVariant = (slot: { start: string; end: string }) => {
+  const getSlotButtonVariant = (slot: TimeSlot) => {
     const slotKey = `${slot.start}-${slot.end}`;
     const isSelected = selectedTimeSlot?.start === slot.start;
     const isAvailable = slotAvailability[slotKey];
@@ -146,7 +124,7 @@ export default function BookService() {
     return "outline";
   };
 
-  const isSlotDisabled = (slot: { start: string; end: string }) => {
+  const isSlotDisabled = (slot: TimeSlot) => {
     const slotKey = `${slot.start}-${slot.end}`;
     return slotAvailability[slotKey] === false;
   };
@@ -189,6 +167,18 @@ export default function BookService() {
       alert(`Failed to create booking. Error: ${message}\n\nPlease try again.`);
     }
   };
+
+  // Business hours calculation for the selected day
+  let businessHoursDisplay = "";
+  if (!selectedDate) {
+    businessHoursDisplay = "";
+  } else if (availableSlots.length === 0) {
+    businessHoursDisplay = "Closed today";
+  } else {
+    const firstSlot = availableSlots[0];
+    const lastSlot = availableSlots[availableSlots.length - 1];
+    businessHoursDisplay = `${firstSlot.start} - ${lastSlot.end}`;
+  }
 
   if (loading) {
     return (
@@ -248,16 +238,11 @@ export default function BookService() {
               <span className="text-muted-foreground">Business Owner:</span>
               <span>{product.shop.owner.name}</span>
             </div>
-
-            {businessSettings && (
+            {/* Business hours for selected day */}
+            {selectedDate && (
               <div className="bg-green-50 p-3 rounded-md">
                 <p className="text-sm text-green-800">
-                  <strong>Duration:</strong> {businessSettings.duration_minutes}{" "}
-                  minutes
-                  <br />
-                  <strong>Business Hours:</strong>{" "}
-                  {businessSettings.working_hours_start} -{" "}
-                  {businessSettings.working_hours_end}
+                  <strong>Business Hours:</strong> {businessHoursDisplay}
                 </p>
               </div>
             )}
@@ -340,6 +325,12 @@ export default function BookService() {
                     <span>Booked</span>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {selectedDate && availableSlots.length === 0 && (
+              <div className="text-center text-muted-foreground">
+                No slots available for this day.
               </div>
             )}
 

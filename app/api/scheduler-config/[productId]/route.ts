@@ -13,7 +13,7 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { productId } = await params;
+    const { productId } = params;
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -21,6 +21,7 @@ export async function GET(
         shop: {
           include: {
             owner: true,
+            timeslotSetting: true,
           },
         },
       },
@@ -31,23 +32,17 @@ export async function GET(
     }
 
     let settings = {
-      duration_minutes: 60,
-      interval_minutes: 60,
-      working_hours_start: "09:00",
-      working_hours_end: "17:00",
-      available_days_in_future: 30,
-      min_booking_notice: 24,
+      interval: 60,
+      days: {},
     };
 
-    if (product.shop.nylasConfigId) {
-      try {
-        if (product.shop.nylasConfigId.startsWith("{")) {
-          const parsedSettings = JSON.parse(product.shop.nylasConfigId);
-          settings = { ...settings, ...parsedSettings };
-        }
-      } catch (error) {
-        // Use default settings if parsing fails
-      }
+    if (product.shop.timeslotSetting) {
+      const ts = product.shop.timeslotSetting;
+      settings = {
+        ...settings,
+        interval: ts.interval || 60,
+        days: ts.days || {},
+      };
     }
 
     return NextResponse.json({
@@ -58,7 +53,7 @@ export async function GET(
       shop_id: product.shop.id,
       shop_name: product.shop.name,
       business_owner: product.shop.owner.name,
-      settings: settings,
+      settings,
     });
   } catch (error) {
     return NextResponse.json(
