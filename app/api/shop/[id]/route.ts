@@ -4,11 +4,12 @@ import prisma from "@/app/lib/db";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id: shopId } = params;
+  const { id: shopId } = await params;
 
+  try {
+    // ...rest of your code (unchanged)
     // Fetch products with ONLY top-level comments (reviews)
     const shop = await prisma.shop.findUnique({
       where: { id: shopId },

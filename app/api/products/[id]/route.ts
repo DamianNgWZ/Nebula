@@ -44,7 +44,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params; // Await params here
+  const { id } = await params;
 
   const session = await isLoggedIn();
   if (!session || session.user?.role !== "BUSINESS_OWNER") {
