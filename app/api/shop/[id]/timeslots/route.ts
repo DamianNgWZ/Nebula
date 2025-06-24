@@ -14,23 +14,23 @@ const timeslotSchema = z.object({
       })
     )
   ),
-  timezone: z.string(),
   interval: z.number().min(15).max(120),
 });
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const setting = await prisma.timeslotSetting.findUnique({
-      where: { shopId: params.id },
+      where: { shopId: id },
     });
 
     return NextResponse.json(
       setting || {
         days: {},
-        timezone: "UTC",
         interval: 60,
       }
     );
@@ -44,9 +44,11 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await isLoggedIn();
+
   if (!session || session.user?.role !== "BUSINESS_OWNER") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -55,10 +57,9 @@ export async function PATCH(
     const body = await req.json();
     const validated = timeslotSchema.parse(body);
 
-    // Verify user owns the shop
     const shop = await prisma.shop.findFirst({
       where: {
-        id: params.id,
+        id,
         ownerId: session.user.id,
       },
     });
@@ -71,10 +72,10 @@ export async function PATCH(
     }
 
     const setting = await prisma.timeslotSetting.upsert({
-      where: { shopId: params.id },
+      where: { shopId: id },
       update: validated,
       create: {
-        shopId: params.id,
+        shopId: id,
         ...validated,
       },
     });

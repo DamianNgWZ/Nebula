@@ -64,12 +64,12 @@ model VerificationToken {
 }
 
 model Shop {
-  id               String           @id @default(cuid())
-  name             String           @unique
-  ownerId          String
-  nylasConfigId    String?
-  products         Product[]
-  owner            User             @relation(fields: [ownerId], references: [id])
+  id              String           @id @default(cuid())
+  name            String           @unique
+  ownerId         String
+  nylasConfigId   String?
+  products        Product[]
+  owner           User             @relation(fields: [ownerId], references: [id])
   timeslotSetting TimeslotSetting?
 }
 
@@ -78,7 +78,6 @@ model TimeslotSetting {
   shopId    String   @unique
   shop      Shop     @relation(fields: [shopId], references: [id])
   days      Json // Stores days and slots (e.g. {Monday: [{start: "09:00", end: "12:00"}]})
-  timezone  String   @default("UTC")
   interval  Int      @default(60) // Minutes between slots
   createdAt DateTime @default(now())
 }

@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const ownerId = searchParams.get("ownerId");
+
+    const where = ownerId ? { ownerId } : {};
+
     const shops = await prisma.shop.findMany({
+      where,
       include: {
         _count: { select: { products: true } },
         owner: { select: { name: true } },
@@ -12,6 +18,7 @@ export async function GET() {
             _count: { select: { comments: true } },
           },
         },
+        timeslotSetting: true,
       },
     });
 
