@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const comments = await prisma.comment.findMany({
       where: {
         productId: productId,
-        parentId: null, // top-level comments
+        parentId: null,
       },
       include: {
         user: true,
@@ -47,6 +47,22 @@ export async function POST(req: Request) {
 
   if (!parsed.success) {
     return new NextResponse(JSON.stringify(parsed.error), { status: 400 });
+  }
+
+  // Verify user has a confirmed booking for product
+  const hasConfirmedBooking = await prisma.booking.findFirst({
+    where: {
+      productId: parsed.data.productId,
+      customerId: session.user.id,
+      status: "CONFIRMED",
+    },
+  });
+
+  if (!hasConfirmedBooking) {
+    return NextResponse.json(
+      { error: "You must have a confirmed booking to comment on this product" },
+      { status: 403 }
+    );
   }
 
   const comment = await prisma.comment.create({
