@@ -42,16 +42,20 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params; // Await params here
+
   const session = await isLoggedIn();
   if (!session || session.user?.role !== "BUSINESS_OWNER") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
   const { name, description, price } = await req.json();
   const updated = await prisma.product.update({
-    where: { id: params.id },
+    where: { id },
     data: { name, description, price },
   });
+
   return NextResponse.json(updated);
 }

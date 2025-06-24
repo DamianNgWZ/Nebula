@@ -49,26 +49,44 @@ export async function POST(req: Request) {
     return new NextResponse(JSON.stringify(parsed.error), { status: 400 });
   }
 
-  // Verify user has a confirmed booking for product
-  const hasConfirmedBooking = await prisma.booking.findFirst({
-    where: {
-      productId: parsed.data.productId,
-      customerId: session.user.id,
-      status: "CONFIRMED",
-    },
-  });
+  // Top-level comment (review)
+  if (!parsed.data.parentId) {
+    if (
+      typeof parsed.data.rating !== "number" ||
+      parsed.data.rating < 1 ||
+      parsed.data.rating > 5
+    ) {
+      return NextResponse.json(
+        { error: "Rating is required for reviews." },
+        { status: 400 }
+      );
+    }
+    // Confirmed booking check for customers
+    const hasConfirmedBooking = await prisma.booking.findFirst({
+      where: {
+        productId: parsed.data.productId,
+        customerId: session.user.id,
+        status: "CONFIRMED",
+      },
+    });
 
-  if (!hasConfirmedBooking) {
-    return NextResponse.json(
-      { error: "You must have a confirmed booking to comment on this product" },
-      { status: 403 }
-    );
+    if (!hasConfirmedBooking) {
+      return NextResponse.json(
+        {
+          error: "You must have a confirmed booking to comment on this product",
+        },
+        { status: 403 }
+      );
+    }
   }
+
+  // For replies, force rating to null
+  const rating = parsed.data.parentId ? null : parsed.data.rating;
 
   const comment = await prisma.comment.create({
     data: {
       content: parsed.data.content,
-      rating: parsed.data.rating,
+      rating: rating,
       productId: parsed.data.productId,
       userId: session.user.id,
       parentId: parsed.data.parentId,
