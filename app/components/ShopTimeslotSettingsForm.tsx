@@ -85,7 +85,6 @@ export default function ShopTimeslotSettingsForm({
   }, [shopId]);
 
   const handleSaveRule = () => {
-    // Always use the currently selected calendar month/year for new rules
     let newRule: TimeslotRule | null = null;
     if (slotType === "date" && selectedDate) {
       newRule = {
@@ -139,7 +138,6 @@ export default function ShopTimeslotSettingsForm({
   const saveSettings = async () => {
     setLoading(true);
     try {
-      // Filter out invalid rules
       const validRules = rules.filter(
         (rule) =>
           typeof rule.year === "number" && typeof rule.month === "number"
@@ -242,8 +240,20 @@ export default function ShopTimeslotSettingsForm({
         </div>
       </div>
       {showSlotModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded shadow-lg w-full max-w-md">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.3)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div className="bg-white p-8 shadow-lg w-full max-w-md rounded-3xl">
             <h2 className="font-bold mb-4">
               {slotType === "date" && (
                 <>
