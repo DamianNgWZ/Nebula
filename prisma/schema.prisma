@@ -77,8 +77,7 @@ model TimeslotSetting {
   id        String   @id @default(cuid())
   shopId    String   @unique
   shop      Shop     @relation(fields: [shopId], references: [id])
-  days      Json // Stores days and slots (e.g. {Monday: [{start: "09:00", end: "12:00"}]})
-  interval  Int      @default(60) // Minutes between slots
+  rules     Json     @default("[]")// Stores all rules (date, range, weekly, weekday)
   createdAt DateTime @default(now())
 }
 

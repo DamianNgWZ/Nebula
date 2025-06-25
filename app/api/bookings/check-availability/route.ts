@@ -1,14 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-
-type DaysType = Record<string, { start: string; end: string }[]>;
+import { getSlotsForDate } from "@/app/lib/timeslotUtils";
 
 export async function POST(req: Request) {
   const body = await req.json();
   const { productId, date, timeSlot } = body;
 
   try {
-    // Get product and its shop with timeslot settings
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -27,19 +26,14 @@ export async function POST(req: Request) {
     const startTime = new Date(`${date}T${timeSlot.start}:00`);
     const endTime = new Date(`${date}T${timeSlot.end}:00`);
 
-    // 1. Check shop availability settings if they exist
-    const timeslotSetting = product.shop.timeslotSetting;
+    // 1. Validate against timeslot rules
+    if (product.shop.timeslotSetting?.rules) {
+      const slotsForDay = getSlotsForDate(
+        product.shop.timeslotSetting.rules as any,
+        date
+      );
 
-    if (timeslotSetting && timeslotSetting.days) {
-      // Type assertion for days
-      const days = timeslotSetting.days as DaysType;
-      const dayOfWeek = startTime.toLocaleDateString("en-US", {
-        weekday: "long",
-      });
-      const daySlots = days[dayOfWeek] || [];
-
-      // Check if time slot is within any configured slot or else alot of errors
-      const isValidSlot = daySlots.some((slot) => {
+      const isValidSlot = slotsForDay.some((slot) => {
         const slotStart = new Date(`${date}T${slot.start}:00`);
         const slotEnd = new Date(`${date}T${slot.end}:00`);
         return startTime >= slotStart && endTime <= slotEnd;
@@ -48,12 +42,12 @@ export async function POST(req: Request) {
       if (!isValidSlot) {
         return NextResponse.json({
           available: false,
-          reason: "Selected time is not available",
+          reason: "Selected time is not within business hours",
         });
       }
     }
 
-    // Check for booking conflicts
+    // 2. Check for booking conflicts
     const conflict = await prisma.booking.findFirst({
       where: {
         product: {
@@ -66,6 +60,12 @@ export async function POST(req: Request) {
           {
             startTime: { lt: endTime },
             endTime: { gt: startTime },
+          },
+          {
+            startTime: { gte: startTime, lte: endTime },
+          },
+          {
+            endTime: { gte: startTime, lte: endTime },
           },
         ],
       },

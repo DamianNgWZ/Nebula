@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useParams } from "next/navigation";
@@ -17,8 +16,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import CommentsSection from "@/app/components/CommentsSection";
-
-type TimeSlot = { start: string; end: string };
+import {
+  getSlotsForDate,
+  TimeSlot,
+  TimeslotRule,
+} from "@/app/lib/timeslotUtils";
 
 export default function BookService() {
   const params = useParams();
@@ -29,12 +31,17 @@ export default function BookService() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
     null
   );
-  const [businessSettings, setBusinessSettings] = useState<any>(null);
+  const [businessSettings, setBusinessSettings] = useState<{
+    rules: TimeslotRule[];
+  } | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [slotAvailability, setSlotAvailability] = useState<{
     [key: string]: boolean;
   }>({});
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -44,7 +51,9 @@ export default function BookService() {
           const data = await res.json();
           setProduct(data);
 
-          const configRes = await fetch(`/api/scheduler-config/${productId}`);
+          const configRes = await fetch(
+            `/api/scheduler-config/${productId}?refresh=${refreshTrigger}`
+          );
           if (configRes.ok) {
             const configData = await configRes.json();
             setBusinessSettings(configData.settings);
@@ -58,22 +67,15 @@ export default function BookService() {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, refreshTrigger]);
 
   useEffect(() => {
     if (!businessSettings || !selectedDate) {
       setAvailableSlots([]);
       return;
     }
-
-    const dayOfWeek: string = new Date(selectedDate).toLocaleDateString(
-      "en-US",
-      { weekday: "long" }
-    );
-
-    // Use the slots as defined in settings, do NOT generate by interval
-    const daySlots: TimeSlot[] = businessSettings.days?.[dayOfWeek] || [];
-    setAvailableSlots(daySlots);
+    const slots = getSlotsForDate(businessSettings.rules || [], selectedDate);
+    setAvailableSlots(slots);
   }, [businessSettings, selectedDate]);
 
   useEffect(() => {
@@ -106,7 +108,6 @@ export default function BookService() {
           availability[`${slot.start}-${slot.end}`] = false;
         }
       }
-
       setSlotAvailability(availability);
       setCheckingAvailability(false);
     };
@@ -168,7 +169,6 @@ export default function BookService() {
     }
   };
 
-  // Business hours calculation for the selected day
   let businessHoursDisplay = "";
   if (!selectedDate) {
     businessHoursDisplay = "";
@@ -204,7 +204,6 @@ export default function BookService() {
           Back to {product.shop.name}
         </Button>
       </Link>
-
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -218,27 +217,23 @@ export default function BookService() {
               <h3 className="text-lg font-semibold">{product.name}</h3>
               <p className="text-muted-foreground">{product.shop.name}</p>
             </div>
-
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Price:</span>
               <Badge variant="secondary" className="text-lg">
                 ${product.price}
               </Badge>
             </div>
-
             {product.description && (
               <div>
                 <span className="text-muted-foreground">Description:</span>
                 <p className="mt-1">{product.description}</p>
               </div>
             )}
-
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Business Owner:</span>
               <span>{product.shop.owner.name}</span>
             </div>
-            {/* Business hours for selected day */}
             {selectedDate && (
               <div className="bg-green-50 p-3 rounded-md">
                 <p className="text-sm text-green-800">
@@ -248,7 +243,6 @@ export default function BookService() {
             )}
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -270,7 +264,6 @@ export default function BookService() {
                 className="w-full p-2 border rounded-md"
               />
             </div>
-
             {selectedDate && availableSlots.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -283,13 +276,11 @@ export default function BookService() {
                     </span>
                   )}
                 </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   {availableSlots.map((slot, index) => {
                     const slotKey = `${slot.start}-${slot.end}`;
                     const isAvailable = slotAvailability[slotKey];
                     const isDisabled = isSlotDisabled(slot);
-
                     return (
                       <Button
                         key={index}
@@ -314,7 +305,6 @@ export default function BookService() {
                     );
                   })}
                 </div>
-
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <CheckCircle className="h-3 w-3 text-green-500" />
@@ -327,13 +317,11 @@ export default function BookService() {
                 </div>
               </div>
             )}
-
             {selectedDate && availableSlots.length === 0 && (
               <div className="text-center text-muted-foreground">
                 No slots available for this day.
               </div>
             )}
-
             {selectedTimeSlot && selectedDate && (
               <div className="p-4 bg-green-50 rounded-md border border-green-200">
                 <h4 className="font-medium text-green-800 mb-2">
@@ -356,7 +344,6 @@ export default function BookService() {
                 </div>
               </div>
             )}
-
             <Button
               onClick={handleBooking}
               disabled={
@@ -369,7 +356,6 @@ export default function BookService() {
                 ? "Checking availability..."
                 : "Request Booking"}
             </Button>
-
             <p className="text-xs text-muted-foreground text-center">
               Your booking request will be sent to {product.shop.owner.name} for
               confirmation.
