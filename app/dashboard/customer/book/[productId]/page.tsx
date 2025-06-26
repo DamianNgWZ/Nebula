@@ -6,9 +6,10 @@ import { ProductWithShop } from "@/types/product";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   ArrowLeft,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   User,
   CheckCircle,
@@ -21,13 +22,14 @@ import {
   TimeSlot,
   TimeslotRule,
 } from "@/app/lib/timeslotUtils";
+import { format } from "date-fns";
 
 export default function BookService() {
   const params = useParams();
   const productId = params.productId as string;
   const [product, setProduct] = useState<ProductWithShop | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
     null
   );
@@ -74,7 +76,8 @@ export default function BookService() {
       setAvailableSlots([]);
       return;
     }
-    const slots = getSlotsForDate(businessSettings.rules || [], selectedDate);
+    const dateString = format(selectedDate, "yyyy-MM-dd");
+    const slots = getSlotsForDate(businessSettings.rules || [], dateString);
     setAvailableSlots(slots);
   }, [businessSettings, selectedDate]);
 
@@ -84,6 +87,7 @@ export default function BookService() {
     const checkSlotAvailability = async () => {
       setCheckingAvailability(true);
       const availability: { [key: string]: boolean } = {};
+      const dateString = format(selectedDate, "yyyy-MM-dd");
 
       for (const slot of availableSlots) {
         try {
@@ -94,7 +98,7 @@ export default function BookService() {
             },
             body: JSON.stringify({
               productId: productId,
-              date: selectedDate,
+              date: dateString,
               timeSlot: slot,
             }),
           });
@@ -133,6 +137,8 @@ export default function BookService() {
   const handleBooking = async () => {
     if (!selectedDate || !selectedTimeSlot || !product) return;
 
+    const dateString = format(selectedDate, "yyyy-MM-dd");
+
     try {
       const response = await fetch("/api/bookings", {
         method: "POST",
@@ -141,17 +147,17 @@ export default function BookService() {
         },
         body: JSON.stringify({
           productId: productId,
-          date: selectedDate,
+          date: dateString,
           timeSlot: selectedTimeSlot,
         }),
       });
 
       if (response.ok) {
         alert(
-          `Booking request sent!\n\nService: ${product.name}\nDate: ${selectedDate}\nTime: ${selectedTimeSlot.start} - ${selectedTimeSlot.end}\n\nThe business owner will confirm your booking.`
+          `Booking request sent!\n\nService: ${product.name}\nDate: ${format(selectedDate, "dd MMMM yyyy")}\nTime: ${selectedTimeSlot.start} - ${selectedTimeSlot.end}\n\nThe business owner will confirm your booking.`
         );
 
-        setSelectedDate("");
+        setSelectedDate(undefined);
         setSelectedTimeSlot(null);
         setSlotAvailability({});
       } else if (response.status === 409) {
@@ -208,7 +214,7 @@ export default function BookService() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <CalendarIcon className="h-5 w-5" />
               Service Details
             </CardTitle>
           </CardHeader>
@@ -251,18 +257,22 @@ export default function BookService() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="date-picker" className="text-sm font-medium">
-                Select Date
-              </label>
-              <input
-                id="date-picker"
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              />
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Select Date</label>
+              <div className="flex justify-center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  disabled={{ before: new Date() }}
+                  className="rounded-md border"
+                />
+              </div>
+              {selectedDate && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Selected: {format(selectedDate, "dd MMMM yyyy (EEEE)")}
+                </p>
+              )}
             </div>
             {selectedDate && availableSlots.length > 0 && (
               <div className="space-y-3">
@@ -332,7 +342,8 @@ export default function BookService() {
                     <strong>Service:</strong> {product.name}
                   </p>
                   <p>
-                    <strong>Date:</strong> {selectedDate}
+                    <strong>Date:</strong>{" "}
+                    {format(selectedDate, "dd MMMM yyyy")}
                   </p>
                   <p>
                     <strong>Time:</strong> {selectedTimeSlot.start} -{" "}
