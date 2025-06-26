@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 type TimeSlot = { start: string; end: string };
 type TimeslotRule =
@@ -52,7 +53,11 @@ export default function ShopTimeslotSettingsForm({
 }: {
   shopId: string;
 }) {
-  const today = new Date();
+  const today = useRef(new Date()).current;
+  const [calendarMonth, setCalendarMonth] = useState<number>(
+    today.getMonth() + 1
+  );
+  const [calendarYear, setCalendarYear] = useState<number>(today.getFullYear());
   const [rules, setRules] = useState<TimeslotRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -66,15 +71,13 @@ export default function ShopTimeslotSettingsForm({
   const [slots, setSlots] = useState<TimeSlot[]>([
     { start: "09:00", end: "17:00" },
   ]);
-  const [calendarMonth, setCalendarMonth] = useState<number>(
-    today.getMonth() + 1
-  );
-  const [calendarYear, setCalendarYear] = useState<number>(today.getFullYear());
+  const [editRuleIndex, setEditRuleIndex] = useState<number | null>(null);
 
   const todayStr = format(today, "yyyy-MM-dd");
 
   useEffect(() => {
     if (!shopId || shopId === "undefined") return;
+    setLoading(true);
     fetch(`/api/shop/${shopId}/timeslots`)
       .then((res) => res.json())
       .then((data) => {
@@ -83,6 +86,51 @@ export default function ShopTimeslotSettingsForm({
       })
       .catch(() => setLoading(false));
   }, [shopId]);
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (!date || date < new Date(todayStr)) return;
+    setSelectedDate(date);
+
+    const ruleIdx = rules.findIndex(
+      (rule) =>
+        rule.type === "date" &&
+        rule.date === format(date, "yyyy-MM-dd") &&
+        rule.year === calendarYear &&
+        rule.month === calendarMonth
+    );
+    if (ruleIdx !== -1) {
+      setSlots([...rules[ruleIdx].slots]);
+      setEditRuleIndex(ruleIdx);
+    } else {
+      setSlots([{ start: "09:00", end: "17:00" }]);
+      setEditRuleIndex(null);
+    }
+    setSlotType("date");
+    setShowSlotModal(true);
+  };
+
+  const handleEditRule = (rule: TimeslotRule, idx: number) => {
+    if (rule.type === "date") {
+      setSelectedDate(new Date(rule.date));
+      setSlots([...rule.slots]);
+      setEditRuleIndex(idx);
+      setSlotType("date");
+      setShowSlotModal(true);
+    } else if (rule.type === "range") {
+      setRangeStart(new Date(rule.start));
+      setRangeEnd(new Date(rule.end));
+      setSlots([...rule.slots]);
+      setEditRuleIndex(idx);
+      setSlotType("range");
+      setShowSlotModal(true);
+    } else if (rule.type === "weekday") {
+      setSlotWeekday(rule.weekday);
+      setSlots([...rule.slots]);
+      setEditRuleIndex(idx);
+      setSlotType("weekday");
+      setShowSlotModal(true);
+    }
+  };
 
   const handleSaveRule = () => {
     let newRule: TimeslotRule | null = null;
@@ -94,6 +142,13 @@ export default function ShopTimeslotSettingsForm({
         date: format(selectedDate, "yyyy-MM-dd"),
         slots: [...slots],
       };
+      if (editRuleIndex !== null) {
+        setRules((prev) =>
+          prev.map((r, i) => (i === editRuleIndex ? newRule! : r))
+        );
+      } else {
+        setRules((prev) => [...prev, newRule!]);
+      }
     } else if (slotType === "range" && rangeStart && rangeEnd) {
       newRule = {
         type: "range",
@@ -103,6 +158,13 @@ export default function ShopTimeslotSettingsForm({
         end: format(rangeEnd, "yyyy-MM-dd"),
         slots: [...slots],
       };
+      if (editRuleIndex !== null) {
+        setRules((prev) =>
+          prev.map((r, i) => (i === editRuleIndex ? newRule! : r))
+        );
+      } else {
+        setRules((prev) => [...prev, newRule!]);
+      }
     } else if (slotType === "weekday" && slotWeekday) {
       newRule = {
         type: "weekday",
@@ -111,15 +173,20 @@ export default function ShopTimeslotSettingsForm({
         weekday: slotWeekday,
         slots: [...slots],
       };
-    }
-    if (newRule) {
-      setRules((prev) => [...prev, newRule!]);
+      if (editRuleIndex !== null) {
+        setRules((prev) =>
+          prev.map((r, i) => (i === editRuleIndex ? newRule! : r))
+        );
+      } else {
+        setRules((prev) => [...prev, newRule!]);
+      }
     }
     setShowSlotModal(false);
     setSlots([{ start: "09:00", end: "17:00" }]);
     setSelectedDate(null);
     setRangeStart(null);
     setRangeEnd(null);
+    setEditRuleIndex(null);
   };
 
   const removeRule = (index: number) =>
@@ -150,13 +217,13 @@ export default function ShopTimeslotSettingsForm({
       if (response.ok) {
         const data = await response.json();
         setRules(data.rules ?? validRules);
-        alert("Timeslot settings saved successfully!");
+        toast.success("Timeslot settings saved successfully!");
       } else {
         const errorData = await response.json();
-        alert(`Failed to save: ${errorData.error || "Unknown error"}`);
+        toast.error(errorData.error || "Failed to save timeslot settings.");
       }
     } catch (error) {
-      alert("Failed to save settings. Please try again.");
+      toast.error("Failed to save settings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -175,16 +242,11 @@ export default function ShopTimeslotSettingsForm({
           <Calendar
             mode="single"
             selected={selectedDate ?? undefined}
-            onSelect={(date) => {
-              if (date && date >= new Date(todayStr)) {
-                setSelectedDate(date ?? null);
-                setSlotType("date");
-                setShowSlotModal(true);
-              }
-            }}
+            onSelect={handleCalendarSelect}
             required
             initialFocus
             disabled={{ before: new Date(todayStr) }}
+            month={new Date(calendarYear, calendarMonth - 1)} // Force calendar to show this month
             onMonthChange={(date) => {
               setCalendarMonth(date.getMonth() + 1);
               setCalendarYear(date.getFullYear());
@@ -196,6 +258,8 @@ export default function ShopTimeslotSettingsForm({
               onClick={() => {
                 setSlotType("weekday");
                 setShowSlotModal(true);
+                setEditRuleIndex(null);
+                setSlots([{ start: "09:00", end: "17:00" }]);
               }}
             >
               + Add Weekly Slot
@@ -205,6 +269,8 @@ export default function ShopTimeslotSettingsForm({
               onClick={() => {
                 setSlotType("range");
                 setShowSlotModal(true);
+                setEditRuleIndex(null);
+                setSlots([{ start: "09:00", end: "17:00" }]);
               }}
             >
               + Add Date Range Slot
@@ -257,7 +323,7 @@ export default function ShopTimeslotSettingsForm({
             <h2 className="font-bold mb-4">
               {slotType === "date" && (
                 <>
-                  Add Slot for{" "}
+                  {editRuleIndex !== null ? "Edit" : "Add"} Slot for{" "}
                   {selectedDate && format(selectedDate, "dd MMMM yyyy (EEEE)")}
                 </>
               )}
@@ -342,8 +408,16 @@ export default function ShopTimeslotSettingsForm({
               </Button>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button onClick={handleSaveRule}>Save</Button>
-              <Button variant="outline" onClick={() => setShowSlotModal(false)}>
+              <Button onClick={handleSaveRule}>
+                {editRuleIndex !== null ? "Update" : "Save"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSlotModal(false);
+                  setEditRuleIndex(null);
+                }}
+              >
                 Cancel
               </Button>
             </div>
@@ -384,13 +458,24 @@ export default function ShopTimeslotSettingsForm({
                 ))}
               </ul>
             </div>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => removeRule(idx)}
-            >
-              Remove
-            </Button>
+            <div className="flex gap-2">
+              {rule.type === "date" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleEditRule(rule, idx)}
+                >
+                  Edit
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => removeRule(idx)}
+              >
+                Remove
+              </Button>
+            </div>
           </div>
         ))}
       </div>
