@@ -61,12 +61,6 @@ export async function POST(req: Request) {
             startTime: { lt: endTime },
             endTime: { gt: startTime },
           },
-          {
-            startTime: { gte: startTime, lte: endTime },
-          },
-          {
-            endTime: { gte: startTime, lte: endTime },
-          },
         ],
       },
     });
