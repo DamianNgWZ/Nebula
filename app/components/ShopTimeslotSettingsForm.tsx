@@ -250,19 +250,16 @@ export default function ShopTimeslotSettingsForm({
             selected={selectedDate ?? undefined}
             onSelect={handleCalendarSelect}
             disabled={(date) => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const checkDate = new Date(date);
-              checkDate.setHours(0, 0, 0, 0);
+              const todayDateStr = format(new Date(), "yyyy-MM-dd");
+              const checkDateStr = format(date, "yyyy-MM-dd");
 
-              if (checkDate < today) return true;
+              if (checkDateStr < todayDateStr) return true;
 
               if (
                 date.getMonth() + 1 !== calendarMonth ||
                 date.getFullYear() !== calendarYear
               )
                 return true;
-
               return false;
             }}
             month={new Date(calendarYear, calendarMonth - 1)}
@@ -325,20 +322,8 @@ export default function ShopTimeslotSettingsForm({
         </div>
       </div>
       {showSlotModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.3)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div className="bg-white p-8 shadow-lg w-full max-w-md rounded-3xl">
+        <div className="fixed inset-0 w-screen h-screen bg-black/30 z-[9999] flex items-center justify-center">
+          <div className="bg-background text-foreground border p-8 shadow-lg w-full max-w-md rounded-3xl">
             <h2 className="font-bold mb-4">
               {slotType === "date" && (
                 <>
@@ -364,6 +349,7 @@ export default function ShopTimeslotSettingsForm({
                       e.target.value ? new Date(e.target.value) : null
                     )
                   }
+                  className="border p-2 rounded bg-background text-foreground"
                 />
                 <span>to</span>
                 <input
@@ -379,12 +365,13 @@ export default function ShopTimeslotSettingsForm({
                       e.target.value ? new Date(e.target.value) : null
                     )
                   }
+                  className="border p-2 rounded bg-background text-foreground"
                 />
               </div>
             )}
             {slotType === "weekday" && (
               <select
-                className="border p-2 rounded mb-2"
+                className="border p-2 rounded mb-2 w-full bg-background text-foreground"
                 value={slotWeekday}
                 onChange={(e) => setSlotWeekday(e.target.value)}
               >
@@ -402,7 +389,7 @@ export default function ShopTimeslotSettingsForm({
                     type="time"
                     value={slot.start}
                     onChange={(e) => updateSlot(i, "start", e.target.value)}
-                    className="border p-1 rounded"
+                    className="border p-1 rounded bg-background text-foreground"
                     step="900"
                   />
                   <span>to</span>
@@ -410,7 +397,7 @@ export default function ShopTimeslotSettingsForm({
                     type="time"
                     value={slot.end}
                     onChange={(e) => updateSlot(i, "end", e.target.value)}
-                    className="border p-1 rounded"
+                    className="border p-1 rounded bg-background text-foreground"
                     step="900"
                   />
                   <Button
@@ -456,7 +443,7 @@ export default function ShopTimeslotSettingsForm({
         {currentMonthRules.map((rule, idx) => (
           <div
             key={idx}
-            className="border p-4 rounded mb-2 flex justify-between items-center"
+            className="border p-4 rounded mb-2 flex justify-between items-center bg-background"
           >
             <div>
               <strong>

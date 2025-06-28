@@ -49,9 +49,9 @@ export default function AvailabilityPage() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Availability Settings</h1>
-        <span className="text-gray-600">{shop.shop_name}</span>
+        <span className="text-muted-foreground">{shop.shop_name}</span>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-background text-foreground p-6 rounded-lg shadow border">
         <ShopTimeslotSettingsForm shopId={shop.shop_id} />
       </div>
     </div>

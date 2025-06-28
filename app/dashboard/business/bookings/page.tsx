@@ -117,26 +117,26 @@ export default function BusinessBookings() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "CONFIRMED":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "CANCELLED":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
   const getRescheduleStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "APPROVED":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "DECLINED":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
@@ -224,7 +224,7 @@ export default function BusinessBookings() {
                         {booking.rescheduleRequests.map((reschedule, index) => (
                           <div
                             key={reschedule.id}
-                            className="p-3 bg-blue-50 rounded-md border"
+                            className="p-3 bg-muted rounded-md border"
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium flex items-center gap-1">
@@ -240,7 +240,7 @@ export default function BusinessBookings() {
                               </Badge>
                             </div>
 
-                            <div className="text-xs space-y-1 mt-2">
+                            <div className="text-xs space-y-1 mt-2 text-muted-foreground">
                               <p>
                                 <strong>New Date:</strong>{" "}
                                 {format(
@@ -283,7 +283,7 @@ export default function BusinessBookings() {
                                       "APPROVED"
                                     )
                                   }
-                                  className="text-green-600 hover:bg-green-50 flex-1"
+                                  className="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950 flex-1"
                                 >
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Approve
@@ -297,7 +297,7 @@ export default function BusinessBookings() {
                                       "DECLINED"
                                     )
                                   }
-                                  className="text-red-600 hover:bg-red-50 flex-1"
+                                  className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950 flex-1"
                                 >
                                   <XCircle className="h-3 w-3 mr-1" />
                                   Decline
@@ -325,7 +325,7 @@ export default function BusinessBookings() {
                             onClick={() =>
                               handleBookingAction(booking.id, "CONFIRMED")
                             }
-                            className="text-green-600 hover:bg-green-50"
+                            className="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Accept
@@ -336,7 +336,7 @@ export default function BusinessBookings() {
                             onClick={() =>
                               handleBookingAction(booking.id, "CANCELLED")
                             }
-                            className="text-red-600 hover:bg-red-50"
+                            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
                           >
                             <XCircle className="h-4 w-4 mr-1" />
                             Decline
