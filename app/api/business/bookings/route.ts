@@ -5,12 +5,8 @@ import { isLoggedIn } from "@/app/lib/hooks";
 export async function GET() {
   try {
     const session = await isLoggedIn();
-    if (
-      !session ||
-      !session.user?.id ||
-      session.user.role !== "BUSINESS_OWNER"
-    ) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!session || session.user?.role !== "BUSINESS_OWNER") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const bookings = await prisma.booking.findMany({
@@ -27,9 +23,7 @@ export async function GET() {
       include: {
         customer: {
           select: {
-            id: true,
             name: true,
-            email: true,
           },
         },
         product: {
@@ -37,6 +31,11 @@ export async function GET() {
             id: true,
             name: true,
             price: true,
+          },
+        },
+        rescheduleRequests: {
+          orderBy: {
+            createdAt: "desc",
           },
         },
       },
