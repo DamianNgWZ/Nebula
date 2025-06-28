@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -6,22 +5,11 @@ import { ProductWithShop } from "@/types/product";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Clock, User } from "lucide-react";
 import Link from "next/link";
 import CommentsSection from "@/app/components/CommentsSection";
-import {
-  getSlotsForDate,
-  TimeSlot,
-  TimeslotRule,
-} from "@/app/lib/timeslotUtils";
+import BookingCalendar from "@/app/components/BookingCalendar";
+import { TimeSlot, TimeslotRule } from "@/app/lib/timeslotUtils";
 import { format } from "date-fns";
 
 export default function BookService() {
@@ -36,14 +24,6 @@ export default function BookService() {
   const [businessSettings, setBusinessSettings] = useState<{
     rules: TimeslotRule[];
   } | null>(null);
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-  const [slotAvailability, setSlotAvailability] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -53,9 +33,7 @@ export default function BookService() {
           const data = await res.json();
           setProduct(data);
 
-          const configRes = await fetch(
-            `/api/scheduler-config/${productId}?refresh=${refreshTrigger}`
-          );
+          const configRes = await fetch(`/api/scheduler-config/${productId}`);
           if (configRes.ok) {
             const configData = await configRes.json();
             setBusinessSettings(configData.settings);
@@ -69,69 +47,11 @@ export default function BookService() {
     };
 
     fetchProduct();
-  }, [productId, refreshTrigger]);
+  }, [productId]);
 
-  useEffect(() => {
-    if (!businessSettings || !selectedDate) {
-      setAvailableSlots([]);
-      return;
-    }
-    const dateString = format(selectedDate, "yyyy-MM-dd");
-    const slots = getSlotsForDate(businessSettings.rules || [], dateString);
-    setAvailableSlots(slots);
-  }, [businessSettings, selectedDate]);
-
-  useEffect(() => {
-    if (availableSlots.length === 0 || !selectedDate) return;
-
-    const checkSlotAvailability = async () => {
-      setCheckingAvailability(true);
-      const availability: { [key: string]: boolean } = {};
-      const dateString = format(selectedDate, "yyyy-MM-dd");
-
-      for (const slot of availableSlots) {
-        try {
-          const response = await fetch("/api/bookings/check-availability", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              productId: productId,
-              date: dateString,
-              timeSlot: slot,
-            }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            availability[`${slot.start}-${slot.end}`] = data.available;
-          } else {
-            availability[`${slot.start}-${slot.end}`] = false;
-          }
-        } catch (error) {
-          availability[`${slot.start}-${slot.end}`] = false;
-        }
-      }
-      setSlotAvailability(availability);
-      setCheckingAvailability(false);
-    };
-
-    checkSlotAvailability();
-  }, [availableSlots, selectedDate, productId]);
-
-  const getSlotButtonVariant = (slot: TimeSlot) => {
-    const slotKey = `${slot.start}-${slot.end}`;
-    const isSelected = selectedTimeSlot?.start === slot.start;
-    const isAvailable = slotAvailability[slotKey];
-
-    if (isSelected) return "default";
-    if (isAvailable === false) return "secondary";
-    return "outline";
-  };
-
-  const isSlotDisabled = (slot: TimeSlot) => {
-    const slotKey = `${slot.start}-${slot.end}`;
-    return slotAvailability[slotKey] === false;
+  const handleSlotSelect = (date: Date, slot: TimeSlot) => {
+    setSelectedDate(date);
+    setSelectedTimeSlot(slot);
   };
 
   const handleBooking = async () => {
@@ -159,7 +79,6 @@ export default function BookService() {
 
         setSelectedDate(undefined);
         setSelectedTimeSlot(null);
-        setSlotAvailability({});
       } else if (response.status === 409) {
         const errorData = await response.json();
         alert(
@@ -174,17 +93,6 @@ export default function BookService() {
       alert(`Failed to create booking. Error: ${message}\n\nPlease try again.`);
     }
   };
-
-  let businessHoursDisplay = "";
-  if (!selectedDate) {
-    businessHoursDisplay = "";
-  } else if (availableSlots.length === 0) {
-    businessHoursDisplay = "Closed today";
-  } else {
-    const firstSlot = availableSlots[0];
-    const lastSlot = availableSlots[availableSlots.length - 1];
-    businessHoursDisplay = `${firstSlot.start} - ${lastSlot.end}`;
-  }
 
   if (loading) {
     return (
@@ -240,13 +148,6 @@ export default function BookService() {
               <span className="text-muted-foreground">Business Owner:</span>
               <span>{product.shop.owner.name}</span>
             </div>
-            {selectedDate && (
-              <div className="bg-green-50 p-3 rounded-md">
-                <p className="text-sm text-green-800">
-                  <strong>Business Hours:</strong> {businessHoursDisplay}
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
         <Card>
@@ -257,81 +158,14 @@ export default function BookService() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-sm font-medium">Select Date</label>
-              <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={{ before: new Date() }}
-                  className="rounded-md border"
-                />
-              </div>
-              {selectedDate && (
-                <p className="text-center text-sm text-muted-foreground">
-                  Selected: {format(selectedDate, "dd MMMM yyyy (EEEE)")}
-                </p>
-              )}
-            </div>
-            {selectedDate && availableSlots.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">
-                    Available Time Slots
-                  </label>
-                  {checkingAvailability && (
-                    <span className="text-xs text-muted-foreground">
-                      Checking availability...
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {availableSlots.map((slot, index) => {
-                    const slotKey = `${slot.start}-${slot.end}`;
-                    const isAvailable = slotAvailability[slotKey];
-                    const isDisabled = isSlotDisabled(slot);
-                    return (
-                      <Button
-                        key={index}
-                        variant={getSlotButtonVariant(slot)}
-                        className={`text-sm relative ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                        disabled={isDisabled || checkingAvailability}
-                        onClick={() => !isDisabled && setSelectedTimeSlot(slot)}
-                      >
-                        <span>
-                          {slot.start} - {slot.end}
-                        </span>
-                        {!checkingAvailability && (
-                          <span className="ml-2">
-                            {isAvailable === false ? (
-                              <XCircle className="h-3 w-3 text-red-500" />
-                            ) : isAvailable === true ? (
-                              <CheckCircle className="h-3 w-3 text-green-500" />
-                            ) : null}
-                          </span>
-                        )}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3 text-green-500" />
-                    <span>Available</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <XCircle className="h-3 w-3 text-red-500" />
-                    <span>Booked</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            {selectedDate && availableSlots.length === 0 && (
-              <div className="text-center text-muted-foreground">
-                No slots available for this day.
-              </div>
-            )}
+            <BookingCalendar
+              productId={productId}
+              businessSettings={businessSettings}
+              onSlotSelect={handleSlotSelect}
+              selectedDate={selectedDate}
+              selectedTimeSlot={selectedTimeSlot}
+            />
+
             {selectedTimeSlot && selectedDate && (
               <div className="p-4 bg-green-50 rounded-md border border-green-200">
                 <h4 className="font-medium text-green-800 mb-2">
@@ -355,18 +189,16 @@ export default function BookService() {
                 </div>
               </div>
             )}
+
             <Button
               onClick={handleBooking}
-              disabled={
-                !selectedDate || !selectedTimeSlot || checkingAvailability
-              }
+              disabled={!selectedDate || !selectedTimeSlot}
               className="w-full"
               size="lg"
             >
-              {checkingAvailability
-                ? "Checking availability..."
-                : "Request Booking"}
+              Request Booking
             </Button>
+
             <p className="text-xs text-muted-foreground text-center">
               Your booking request will be sent to {product.shop.owner.name} for
               confirmation.

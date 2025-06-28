@@ -68,7 +68,6 @@ model Shop {
   id              String           @id @default(cuid())
   name            String           @unique
   ownerId         String
-  nylasConfigId   String?
   products        Product[]
   owner           User             @relation(fields: [ownerId], references: [id])
   timeslotSetting TimeslotSetting?
@@ -109,19 +108,19 @@ model Comment {
 }
 
 model Booking {
-  id                   String             @id @default(cuid())
+  id                   String              @id @default(cuid())
   customerId           String
   productId            String
   startTime            DateTime
   endTime              DateTime
-  status               BookingStatus      @default(PENDING)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  status               BookingStatus       @default(PENDING)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   nylasEventId         String?
   customerNylasEventId String?
-  customer             User               @relation("CustomerBookings", fields: [customerId], references: [id])
-  product              Product            @relation(fields: [productId], references: [id])
-  rescheduleRequest    RescheduleRequest?
+  customer             User                @relation("CustomerBookings", fields: [customerId], references: [id])
+  product              Product             @relation(fields: [productId], references: [id])
+  rescheduleRequests   RescheduleRequest[]
 }
 
 enum UserRole {
@@ -138,7 +137,7 @@ enum BookingStatus {
 
 model RescheduleRequest {
   id         String  @id @default(cuid())
-  bookingId  String  @unique
+  bookingId  String
   booking    Booking @relation(fields: [bookingId], references: [id])
   customerId String
   customer   User    @relation("CustomerReschedules", fields: [customerId], references: [id])

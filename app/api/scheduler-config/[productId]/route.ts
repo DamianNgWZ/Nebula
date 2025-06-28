@@ -5,9 +5,10 @@ import { isLoggedIn } from "@/app/lib/hooks";
 
 export async function GET(
   request: Request,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
-  const { productId } = params;
+  const { productId } = await params;
+
   try {
     const session = await isLoggedIn();
     if (!session || !session.user?.id) {
@@ -19,7 +20,7 @@ export async function GET(
       include: {
         shop: {
           include: {
-            owner: true,
+            owner: true, // Include owner to access grantId
             timeslotSetting: true,
           },
         },
@@ -32,7 +33,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        config_id: product.shop.nylasConfigId || `shop-${product.shop.id}`,
+        config_id: product.shop.owner.grantId || `shop-${product.shop.id}`,
         product_id: productId,
         product_name: product.name,
         product_price: product.price,

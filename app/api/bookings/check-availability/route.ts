@@ -5,7 +5,7 @@ import { getSlotsForDate } from "@/app/lib/timeslotUtils";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { productId, date, timeSlot } = body;
+  const { productId, date, timeSlot, excludeBookingId } = body;
 
   try {
     const product = await prisma.product.findUnique({
@@ -48,21 +48,28 @@ export async function POST(req: Request) {
     }
 
     // 2. Check for booking conflicts
-    const conflict = await prisma.booking.findFirst({
-      where: {
-        product: {
-          shopId: product.shop.id,
-        },
-        status: {
-          in: ["PENDING", "CONFIRMED"],
-        },
-        OR: [
-          {
-            startTime: { lt: endTime },
-            endTime: { gt: startTime },
-          },
-        ],
+    const whereClause: any = {
+      product: {
+        shopId: product.shop.id,
       },
+      status: {
+        in: ["PENDING", "CONFIRMED"],
+      },
+      OR: [
+        {
+          startTime: { lt: endTime },
+          endTime: { gt: startTime },
+        },
+      ],
+    };
+
+    // Exclude specific booking for reschedule requests
+    if (excludeBookingId) {
+      whereClause.id = { not: excludeBookingId };
+    }
+
+    const conflict = await prisma.booking.findFirst({
+      where: whereClause,
     });
 
     return NextResponse.json({ available: !conflict });

@@ -29,14 +29,15 @@ interface BusinessBooking {
     name: string;
     price: number;
   };
-  rescheduleRequest?: {
+  rescheduleRequests?: {
     id: string;
     status: string;
     requestedDate: string;
     requestedStartTime: string;
     requestedEndTime: string;
     reason: string;
-  };
+    createdAt: string;
+  }[];
 }
 
 export default function BusinessBookings() {
@@ -89,12 +90,11 @@ export default function BusinessBookings() {
     action: "APPROVED" | "DECLINED"
   ) => {
     try {
-      const res = await fetch(
-        `/api/reschedule-requests/${rescheduleId}/${action.toLowerCase()}`,
-        {
-          method: "PATCH",
-        }
-      );
+      const res = await fetch(`/api/reschedule-requests/${rescheduleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
 
       if (res.ok) {
         fetchBookings();
@@ -217,87 +217,97 @@ export default function BusinessBookings() {
                     </div>
                   </div>
 
-                  {/* Reschedule Request */}
-                  {booking.rescheduleRequest && (
-                    <div className="p-3 bg-blue-50 rounded-md border space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium flex items-center gap-1">
-                          <Edit className="h-3 w-3" />
-                          Reschedule Request
-                        </span>
-                        <Badge
-                          className={getRescheduleStatusColor(
-                            booking.rescheduleRequest.status
-                          )}
-                        >
-                          {booking.rescheduleRequest.status}
-                        </Badge>
-                      </div>
-
-                      <div className="text-xs space-y-1">
-                        <p>
-                          <strong>New Date:</strong>{" "}
-                          {format(
-                            new Date(booking.rescheduleRequest.requestedDate),
-                            "dd MMM yyyy"
-                          )}
-                        </p>
-                        <p>
-                          <strong>New Time:</strong>{" "}
-                          {format(
-                            new Date(
-                              booking.rescheduleRequest.requestedStartTime
-                            ),
-                            "HH:mm"
-                          )}{" "}
-                          -{" "}
-                          {format(
-                            new Date(
-                              booking.rescheduleRequest.requestedEndTime
-                            ),
-                            "HH:mm"
-                          )}
-                        </p>
-                        <p>
-                          <strong>Reason:</strong>{" "}
-                          {booking.rescheduleRequest.reason}
-                        </p>
-                      </div>
-
-                      {booking.rescheduleRequest.status === "PENDING" && (
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleRescheduleAction(
-                                booking.rescheduleRequest!.id,
-                                "APPROVED"
-                              )
-                            }
-                            className="text-green-600 hover:bg-green-50 flex-1"
+                  {/* Show all reschedule requests for this booking */}
+                  {booking.rescheduleRequests &&
+                    booking.rescheduleRequests.length > 0 && (
+                      <div className="space-y-2">
+                        {booking.rescheduleRequests.map((reschedule, index) => (
+                          <div
+                            key={reschedule.id}
+                            className="p-3 bg-blue-50 rounded-md border"
                           >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleRescheduleAction(
-                                booking.rescheduleRequest!.id,
-                                "DECLINED"
-                              )
-                            }
-                            className="text-red-600 hover:bg-red-50 flex-1"
-                          >
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Decline
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <Edit className="h-3 w-3" />
+                                Reschedule #{index + 1}
+                              </span>
+                              <Badge
+                                className={getRescheduleStatusColor(
+                                  reschedule.status
+                                )}
+                              >
+                                {reschedule.status}
+                              </Badge>
+                            </div>
+
+                            <div className="text-xs space-y-1 mt-2">
+                              <p>
+                                <strong>New Date:</strong>{" "}
+                                {format(
+                                  new Date(reschedule.requestedDate),
+                                  "dd MMM yyyy"
+                                )}
+                              </p>
+                              <p>
+                                <strong>New Time:</strong>{" "}
+                                {format(
+                                  new Date(reschedule.requestedStartTime),
+                                  "HH:mm"
+                                )}{" "}
+                                -{" "}
+                                {format(
+                                  new Date(reschedule.requestedEndTime),
+                                  "HH:mm"
+                                )}
+                              </p>
+                              <p>
+                                <strong>Reason:</strong> {reschedule.reason}
+                              </p>
+                              <p>
+                                <strong>Requested:</strong>{" "}
+                                {format(
+                                  new Date(reschedule.createdAt),
+                                  "MMM dd, yyyy"
+                                )}
+                              </p>
+                            </div>
+
+                            {reschedule.status === "PENDING" && (
+                              <div className="flex gap-2 pt-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleRescheduleAction(
+                                      reschedule.id,
+                                      "APPROVED"
+                                    )
+                                  }
+                                  className="text-green-600 hover:bg-green-50 flex-1"
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleRescheduleAction(
+                                      reschedule.id,
+                                      "DECLINED"
+                                    )
+                                  }
+                                  className="text-red-600 hover:bg-red-50 flex-1"
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Decline
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-lg font-semibold text-green-600">
@@ -305,7 +315,9 @@ export default function BusinessBookings() {
                     </span>
 
                     {booking.status === "PENDING" &&
-                      !booking.rescheduleRequest && (
+                      !booking.rescheduleRequests?.some(
+                        (r) => r.status === "PENDING"
+                      ) && (
                         <div className="flex gap-2">
                           <Button
                             variant="outline"

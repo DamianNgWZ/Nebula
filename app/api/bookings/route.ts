@@ -19,7 +19,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get product and business owner info
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -35,15 +34,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Convert date and timeSlot to DateTime
     const startTime = new Date(`${date}T${timeSlot.start}:00`);
     const endTime = new Date(`${date}T${timeSlot.end}:00`);
 
-    // Check for existing bookings that conflict with this time slot (shop-level)
     const conflict = await prisma.booking.findFirst({
       where: {
         product: {
-          shopId: product.shopId, // Check across all products in the shop
+          shopId: product.shopId,
         },
         status: {
           in: ["PENDING", "CONFIRMED"],
@@ -64,14 +61,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create booking in database only (NO calendar events yet)
     const booking = await prisma.booking.create({
       data: {
         customerId: session.user.id,
         productId,
         startTime,
         endTime,
-        status: "PENDING", // Starts as pending
+        status: "PENDING",
       },
     });
 
@@ -117,6 +113,11 @@ export async function GET() {
             },
           },
         },
+        rescheduleRequests: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
       orderBy: {
         startTime: "desc",
@@ -128,6 +129,118 @@ export async function GET() {
     console.error("Error fetching customer bookings:", error);
     return NextResponse.json(
       { error: "Failed to fetch bookings" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await isLoggedIn();
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { bookingId, status } = body;
+
+    if (!bookingId) {
+      return NextResponse.json({ error: "Missing bookingId" }, { status: 400 });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        product: {
+          include: {
+            shop: {
+              include: {
+                owner: true,
+              },
+            },
+          },
+        },
+        customer: true,
+      },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    if (booking.customerId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status },
+    });
+
+    return NextResponse.json(updatedBooking);
+  } catch (error) {
+    console.error("Error updating booking:", error);
+    return NextResponse.json(
+      { error: "Failed to update booking" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await isLoggedIn();
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const bookingId = searchParams.get("bookingId");
+
+    if (!bookingId) {
+      return NextResponse.json(
+        { error: "Missing bookingId parameter" },
+        { status: 400 }
+      );
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        product: {
+          include: {
+            shop: {
+              include: {
+                owner: true,
+              },
+            },
+          },
+        },
+        customer: true,
+      },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    if (booking.customerId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const cancelledBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "CANCELLED" },
+    });
+
+    return NextResponse.json({
+      message: "Booking cancelled successfully",
+      booking: cancelledBooking,
+    });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return NextResponse.json(
+      { error: "Failed to cancel booking" },
       { status: 500 }
     );
   }

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, User, Edit } from "lucide-react";
 import RescheduleModal from "@/app/components/RescheduleModal";
+import { format } from "date-fns";
 
 interface BookingWithDetails {
   id: string;
@@ -13,14 +14,15 @@ interface BookingWithDetails {
   endTime: string;
   status: string;
   createdAt: string;
-  rescheduleRequest?: {
+  rescheduleRequests?: {
     id: string;
     status: string;
     requestedDate: string;
     requestedStartTime: string;
     requestedEndTime: string;
     reason: string;
-  };
+    createdAt: string;
+  }[];
   product: {
     id: string;
     name: string;
@@ -63,10 +65,8 @@ export default function CustomerBookings() {
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED" }),
+      const res = await fetch(`/api/bookings?bookingId=${bookingId}`, {
+        method: "DELETE",
       });
       if (res.ok) {
         fetchBookings();
@@ -197,28 +197,56 @@ export default function CustomerBookings() {
                     </div>
                   </div>
 
-                  {/* Reschedule Request Status */}
-                  {booking.rescheduleRequest && (
-                    <div className="p-3 bg-blue-50 rounded-md border">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          Reschedule Request
-                        </span>
-                        <Badge
-                          className={getRescheduleStatusColor(
-                            booking.rescheduleRequest.status
-                          )}
-                        >
-                          {booking.rescheduleRequest.status}
-                        </Badge>
+                  {/* Reschedule Request Status - Show latest pending or most recent */}
+                  {booking.rescheduleRequests &&
+                    booking.rescheduleRequests.length > 0 && (
+                      <div className="p-3 bg-blue-50 rounded-md border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            Reschedule History (
+                            {booking.rescheduleRequests.length})
+                          </span>
+                        </div>
+                        {(() => {
+                          const latestReschedule =
+                            booking.rescheduleRequests.sort(
+                              (a, b) =>
+                                new Date(b.createdAt).getTime() -
+                                new Date(a.createdAt).getTime()
+                            )[0];
+                          const pendingReschedule =
+                            booking.rescheduleRequests.find(
+                              (r) => r.status === "PENDING"
+                            );
+                          const displayReschedule =
+                            pendingReschedule || latestReschedule;
+
+                          return (
+                            <div className="mt-2">
+                              <Badge
+                                className={getRescheduleStatusColor(
+                                  displayReschedule.status
+                                )}
+                              >
+                                {displayReschedule.status}
+                              </Badge>
+                              {displayReschedule.status === "PENDING" && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Waiting for business owner approval
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Latest:{" "}
+                                {format(
+                                  new Date(displayReschedule.createdAt),
+                                  "MMM dd, yyyy"
+                                )}
+                              </p>
+                            </div>
+                          );
+                        })()}
                       </div>
-                      {booking.rescheduleRequest.status === "PENDING" && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Waiting for business owner approval
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-lg font-semibold text-green-600">
@@ -227,7 +255,9 @@ export default function CustomerBookings() {
 
                     <div className="flex gap-2">
                       {booking.status === "CONFIRMED" &&
-                        !booking.rescheduleRequest && (
+                        !booking.rescheduleRequests?.some(
+                          (r) => r.status === "PENDING"
+                        ) && (
                           <Button
                             variant="outline"
                             size="sm"
