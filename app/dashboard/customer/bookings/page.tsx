@@ -90,26 +90,26 @@ export default function CustomerBookings() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "CONFIRMED":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "CANCELLED":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
   const getRescheduleStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "APPROVED":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "DECLINED":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
@@ -200,7 +200,7 @@ export default function CustomerBookings() {
                   {/* Reschedule Request Status - Show latest pending or most recent */}
                   {booking.rescheduleRequests &&
                     booking.rescheduleRequests.length > 0 && (
-                      <div className="p-3 bg-blue-50 rounded-md border">
+                      <div className="p-3 bg-muted rounded-md border">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">
                             Reschedule History (
