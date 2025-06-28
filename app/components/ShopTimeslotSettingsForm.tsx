@@ -88,7 +88,13 @@ export default function ShopTimeslotSettingsForm({
   }, [shopId]);
 
   const handleCalendarSelect = (date: Date | undefined) => {
-    if (!date || date < new Date(todayStr)) return;
+    if (!date) return;
+
+    const todayDateStr = format(new Date(), "yyyy-MM-dd");
+    const checkDateStr = format(date, "yyyy-MM-dd");
+
+    if (checkDateStr < todayDateStr) return;
+
     setSelectedDate(date);
 
     const ruleIdx = rules.findIndex(
@@ -243,10 +249,23 @@ export default function ShopTimeslotSettingsForm({
             mode="single"
             selected={selectedDate ?? undefined}
             onSelect={handleCalendarSelect}
-            required
-            initialFocus
-            disabled={{ before: new Date(todayStr) }}
-            month={new Date(calendarYear, calendarMonth - 1)} // Force calendar to show this month
+            disabled={(date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const checkDate = new Date(date);
+              checkDate.setHours(0, 0, 0, 0);
+
+              if (checkDate < today) return true;
+
+              if (
+                date.getMonth() + 1 !== calendarMonth ||
+                date.getFullYear() !== calendarYear
+              )
+                return true;
+
+              return false;
+            }}
+            month={new Date(calendarYear, calendarMonth - 1)}
             onMonthChange={(date) => {
               setCalendarMonth(date.getMonth() + 1);
               setCalendarYear(date.getFullYear());
