@@ -9,22 +9,23 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  grantEmail    String?
-  grantId       String?
-  userName      String?   @unique
-  accounts      Account[]
-  bookings      Booking[] @relation("CustomerBookings")
-  comments      Comment[]
-  sessions      Session[]
-  Shop          Shop[]
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String              @unique
+  emailVerified      DateTime?
+  image              String?
+  role               UserRole?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  grantEmail         String?
+  grantId            String?
+  userName           String?             @unique
+  accounts           Account[]
+  bookings           Booking[]           @relation("CustomerBookings")
+  comments           Comment[]
+  sessions           Session[]
+  Shop               Shop[]
+  rescheduleRequests RescheduleRequest[] @relation("CustomerReschedules")
 }
 
 model Account {
@@ -77,7 +78,7 @@ model TimeslotSetting {
   id        String   @id @default(cuid())
   shopId    String   @unique
   shop      Shop     @relation(fields: [shopId], references: [id])
-  rules     Json     @default("[]")// Stores all rules (date, range, weekly, weekday)
+  rules     Json     @default("[]") // Stores all rules (date, range, weekly, weekday)
   createdAt DateTime @default(now())
 }
 
@@ -108,18 +109,19 @@ model Comment {
 }
 
 model Booking {
-  id                   String        @id @default(cuid())
+  id                   String             @id @default(cuid())
   customerId           String
   productId            String
   startTime            DateTime
   endTime              DateTime
-  status               BookingStatus @default(PENDING)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  status               BookingStatus      @default(PENDING)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   nylasEventId         String?
   customerNylasEventId String?
-  customer             User          @relation("CustomerBookings", fields: [customerId], references: [id])
-  product              Product       @relation(fields: [productId], references: [id])
+  customer             User               @relation("CustomerBookings", fields: [customerId], references: [id])
+  product              Product            @relation(fields: [productId], references: [id])
+  rescheduleRequest    RescheduleRequest?
 }
 
 enum UserRole {
@@ -132,4 +134,31 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+model RescheduleRequest {
+  id         String  @id @default(cuid())
+  bookingId  String  @unique
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  customerId String
+  customer   User    @relation("CustomerReschedules", fields: [customerId], references: [id])
+
+  // New requested time
+  requestedDate      String
+  requestedStartTime DateTime
+  requestedEndTime   DateTime
+  reason             String
+
+  status      RescheduleStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  respondedAt DateTime?
+  respondedBy String?
+
+  @@map("reschedule_requests")
+}
+
+enum RescheduleStatus {
+  PENDING
+  APPROVED
+  DECLINED
 }

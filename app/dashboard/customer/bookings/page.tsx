@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Edit } from "lucide-react";
+import RescheduleModal from "@/app/components/RescheduleModal";
 
 interface BookingWithDetails {
   id: string;
@@ -12,6 +13,14 @@ interface BookingWithDetails {
   endTime: string;
   status: string;
   createdAt: string;
+  rescheduleRequest?: {
+    id: string;
+    status: string;
+    requestedDate: string;
+    requestedStartTime: string;
+    requestedEndTime: string;
+    reason: string;
+  };
   product: {
     id: string;
     name: string;
@@ -29,24 +38,28 @@ interface BookingWithDetails {
 export default function CustomerBookings() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rescheduleModal, setRescheduleModal] = useState<{
+    isOpen: boolean;
+    booking: BookingWithDetails | null;
+  }>({ isOpen: false, booking: null });
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const res = await fetch("/api/bookings");
-        if (res.ok) {
-          const data = await res.json();
-          setBookings(data);
-        }
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBookings();
   }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const res = await fetch("/api/bookings");
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data);
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
@@ -56,17 +69,22 @@ export default function CustomerBookings() {
         body: JSON.stringify({ status: "CANCELLED" }),
       });
       if (res.ok) {
-        const updatedRes = await fetch("/api/bookings");
-        if (updatedRes.ok) {
-          const data = await updatedRes.json();
-          setBookings(data);
-        }
+        fetchBookings();
       } else {
         console.error("Failed to cancel booking");
       }
     } catch (error) {
       console.error("Error cancelling booking:", error);
     }
+  };
+
+  const handleRescheduleClick = (booking: BookingWithDetails) => {
+    setRescheduleModal({ isOpen: true, booking });
+  };
+
+  const handleRescheduleSuccess = () => {
+    setRescheduleModal({ isOpen: false, booking: null });
+    fetchBookings();
   };
 
   const getStatusColor = (status: string) => {
@@ -76,6 +94,19 @@ export default function CustomerBookings() {
       case "CONFIRMED":
         return "bg-green-100 text-green-800";
       case "CANCELLED":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getRescheduleStatusColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-blue-100 text-blue-800";
+      case "APPROVED":
+        return "bg-green-100 text-green-800";
+      case "DECLINED":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -166,20 +197,57 @@ export default function CustomerBookings() {
                     </div>
                   </div>
 
+                  {/* Reschedule Request Status */}
+                  {booking.rescheduleRequest && (
+                    <div className="p-3 bg-blue-50 rounded-md border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          Reschedule Request
+                        </span>
+                        <Badge
+                          className={getRescheduleStatusColor(
+                            booking.rescheduleRequest.status
+                          )}
+                        >
+                          {booking.rescheduleRequest.status}
+                        </Badge>
+                      </div>
+                      {booking.rescheduleRequest.status === "PENDING" && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Waiting for business owner approval
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-lg font-semibold text-green-600">
                       ${booking.product.price}
                     </span>
 
-                    {booking.status === "PENDING" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCancelBooking(booking.id)}
-                      >
-                        Cancel Booking
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {booking.status === "CONFIRMED" &&
+                        !booking.rescheduleRequest && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRescheduleClick(booking)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Reschedule
+                          </Button>
+                        )}
+
+                      {booking.status === "PENDING" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelBooking(booking.id)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -187,6 +255,13 @@ export default function CustomerBookings() {
           })}
         </div>
       )}
+
+      <RescheduleModal
+        isOpen={rescheduleModal.isOpen}
+        booking={rescheduleModal.booking}
+        onClose={() => setRescheduleModal({ isOpen: false, booking: null })}
+        onSuccess={handleRescheduleSuccess}
+      />
     </div>
   );
 }
