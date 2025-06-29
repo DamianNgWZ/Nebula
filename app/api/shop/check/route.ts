@@ -14,6 +14,7 @@ export async function GET() {
       where: { ownerId: session.user.id },
       include: {
         products: true,
+        owner: true,
       },
     });
 
@@ -26,7 +27,7 @@ export async function GET() {
       shop_id: shop.id,
       shop_name: shop.name,
       product_count: shop.products.length,
-      nylas_config_id: shop.nylasConfigId,
+      nylas_config_id: shop.owner.grantId,
     });
   } catch (error) {
     return NextResponse.json({ hasShop: false }, { status: 500 });
