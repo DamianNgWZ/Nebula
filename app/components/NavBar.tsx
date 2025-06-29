@@ -7,7 +7,7 @@ export function NavBar() {
     <div className="flex py-5 items-center justify-between">
       <Link href="/" className="flex items-center gap-2">
         <Image
-          src="/logo.png"
+          src="/Logo.png"
           alt="Logo"
           width={40}
           height={40}

@@ -20,7 +20,7 @@ export function AuthModal() {
       <DialogContent className="sm:max-w-[370px] fixed top-1/2 left-1/2 !-translate-x-1/2 !-translate-y-1/2 bg-background text-foreground border">
         <DialogHeader className="flex flex-row items-center justify-center space-x-2">
           <Image
-            src="/logo.png"
+            src="/Logo.png"
             alt="Logo"
             width={40}
             height={40}
