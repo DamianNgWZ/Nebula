@@ -14,8 +14,8 @@ export function NavBar() {
           className="rounded-lg shadow-lg"
         />
         <div className="text-3xl font-semibold">
-          <span className="text-gray-800">Ne</span>
-          <span className="text-blue-500">Bula</span>
+          <span className="text-foreground">Ne</span>
+          <span className="text-primary">Bula</span>
         </div>
       </Link>
 
