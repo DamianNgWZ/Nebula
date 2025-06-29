@@ -17,7 +17,7 @@ export function AuthModal() {
         <Button>Sign In / Sign Up</Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[370px] fixed top-1/2 left-1/2 !-translate-x-1/2 !-translate-y-1/2">
+      <DialogContent className="sm:max-w-[370px] fixed top-1/2 left-1/2 !-translate-x-1/2 !-translate-y-1/2 bg-background text-foreground border">
         <DialogHeader className="flex flex-row items-center justify-center space-x-2">
           <Image
             src="/logo.png"
@@ -26,9 +26,9 @@ export function AuthModal() {
             height={40}
             className="rounded-lg"
           />
-          <DialogTitle className="text-primary text-3xl font-bold">
-            <span className="text-black">Ne</span>
-            Bula
+          <DialogTitle className="text-3xl font-bold">
+            <span className="text-foreground dark:text-foreground">Ne</span>
+            <span className="text-primary">Bula</span>
           </DialogTitle>
         </DialogHeader>
 
