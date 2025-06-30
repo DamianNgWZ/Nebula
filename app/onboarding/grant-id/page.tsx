@@ -21,6 +21,8 @@ export default function OnboardingrouteTwo() {
           </CardDescription>
           <Image
             src="/LoadingGif.gif"
+            width={300}
+            height={300}
             alt="Almost finished gif"
             className="w-full rounded-lg"
           />
