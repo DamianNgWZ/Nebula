@@ -1,4 +1,5 @@
 # 🌌 Nebula: Scheduling for Your Business
+Try our App: http://nebula-seven-bice.vercel.app/
 
 **A scheduling application built to reduce admin overhead for small businesses.**
 
