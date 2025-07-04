@@ -1,126 +1,80 @@
 # 🌌 Nebula: Scheduling for Your Business
-Try our App: http://nebula-seven-bice.vercel.app/
 
-**A scheduling application built to reduce admin overhead for small businesses.**
+Try our App: [https://nebula-seven-bice.vercel.app/](https://nebula-seven-bice.vercel.app/)
 
----
-
-## 🎯 Motivation
-
-The motivation behind our project stems from real-world challenges faced by owners of 
-home-based or independent businesses. Through conversations with such business owners, 
-we gained valuable insights into the inefficiencies, especially so in service oriented 
-businesses such as hair stylists, make-up artists and the likeness. 
-
-They face administrative hassles managing appointments and communicating with clients, 
-especially when demand for the services they offer surges. Therefore, we aim to create 
-a web app that shoulders the administrtative burden of scheduling appointments and reminding clients of said 
-appointments. We aim to decrease the valuable time spent on such repetitive and human-error inducing
-processes, giving this time back to business owners to actually allow them to work on enhancing their
-services to the best of their abilities.
+**Nebula is a scheduling application designed to reduce admin overhead for small businesses.**
 
 ---
 
-## ✨ Features
+## 🎯 Why Use Nebula?
 
-- Schedule meetings and manage availability
-- Integration with Google Calendar (via Nylas)
-- OAuth authentication via Google and GitHub
-- Responsive UI with Tailwind and Shadcn/UI components
+Running a home-based or independent business is challenging—especially when it comes to managing appointments and communicating with clients. Nebula was created after hearing from real business owners (like hair stylists and make-up artists) about the time lost to manual scheduling, reminders, and admin work.
 
----
-
-## 🛠 Tech Stack
-
-**Frontend:** Next.js, Tailwind CSS, Shadcn/UI, Conform  
-**Backend/API:** Next.js API routes, Nylas  
-**Authentication:** Auth.js  
-**Database:** Supabase (with Prisma ORM)  
-**Deployment & Testing:** Vercel
+**Nebula gives you that time back.**  
+Our app automates appointment scheduling, reminders, and availability management, so you can focus on delivering great service—not paperwork.
 
 ---
 
-## 🚀 Getting Started
+## ✨ What Can Nebula Do for You?
 
-To run the project locally:
-
-1. **Clone the repository and navigate into it**
-
-   ```bash
-   git clone https://github.com/yourusername/nebula.git
-   cd nebula
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
-
-3. **Configure environment variables**
-
-   Copy the example env file and update it with real values:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Then open `.env` in your editor and update the placeholders:
-
-   ```env
-   DATABASE_URL="postgresql://<user>:<password>@<supabase-url>:6543/postgres?pgbouncer=true&statement_cache_mode=unsafe"
-
-   AUTH_GOOGLE_ID="your-google-client-id"
-   AUTH_GOOGLE_SECRET="your-google-client-secret"
-
-   AUTH_GITHUB_ID="your-github-client-id"
-   AUTH_GITHUB_SECRET="your-github-client-secret"
-
-   AUTH_SECRET="your-auth-secret"
-   ```
-
-   > ⚠️ You do **not** need to run `npx prisma db push`, `migrate`, or any Prisma CLI commands.  
-   > The database is already provisioned — this setup is just for running and testing the app locally.
-
-4. **Start the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
+- **Book and manage appointments** with an easy-to-use calendar
+- **Set your availability** so customers can only book when you’re free
+- **Get automatic reminders** for you and your clients
+- **Sync with Google Calendar** (no double-bookings, ever)
+- **Sign in securely** with Google or GitHub
+- **Enjoy a modern, mobile-friendly interface** that works on any device
 
 ---
 
-## 📁 Project Structure
+## 👩‍💼 Who Is Nebula For?
 
-/app → App Router-based pages  
-/components → UI components  
-/prisma → Prisma schema and config  
-/lib → Auth, DB, utilities  
-/public → Static assets (logos, etc.)
-
----
-
-## 🌐 Deployment
-
-Deployed on [Vercel](https://vercel.com/). Pushes to `main` auto-deploy.
+- Small business owners
+- Freelancers and independent professionals
+- Service providers (hair, beauty, consulting, etc.)
+- Anyone who wants to simplify appointment management
 
 ---
 
-## 📚 Resources
+## 🚀 How to Get Started
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [Supabase Docs](https://supabase.com/docs)
-- [Prisma Docs](https://www.prisma.io/docs)
-- [Auth.js Docs](https://authjs.dev)
+1. **Visit the App:**  
+   [https://nebula-seven-bice.vercel.app/](https://nebula-seven-bice.vercel.app/)
+
+2. **Sign Up:**  
+   Use your Google or GitHub account for quick, secure access.
+
+3. **Set Up Your Business:**  
+   Add your business details and services.
+
+4. **Manage Your Calendar:**  
+   Set your available times and let customers book instantly.
+
+5. **Stay Notified:**  
+   Get reminders and manage bookings from your dashboard.
 
 ---
 
-## 🤝 Contributions
+## 💡 Key Features at a Glance
 
-Feel free to fork, clone, and open pull requests! All contributions are welcome.
+| Feature                | Benefit                                         |
+|------------------------|-------------------------------------------------|
+| Google Calendar Sync   | No more double-bookings or missed slots         |
+| Smart Reminders        | Automated notifications for you and clients     |
+| Easy Rescheduling      | Clients can request changes, you stay in control|
+| Secure Authentication  | Sign in with Google or GitHub                   |
+| Mobile-Ready           | Manage your business on the go                  |
+
+---
+
+## 🛡️ Your Data, Your Privacy
+
+- All data is securely stored and never shared with third parties.
+- You control your schedule and who can book with you.
+
+---
+
+## 🤝 Feedback & Support
+
+We’re always improving! If you have suggestions or run into issues, drop us a quick DM :)
+
+**Nebula makes scheduling simple, so you can focus on what matters most—your business.**
