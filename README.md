@@ -8,7 +8,7 @@ Try our App: [https://nebula-seven-bice.vercel.app/](https://nebula-seven-bice.v
 
 ## 🎯 Why Use Nebula?
 
-Running a home-based or independent business is challenging—especially when it comes to managing appointments and communicating with clients. Nebula was created after hearing from real business owners (like hair stylists and make-up artists) about the time lost to manual scheduling, reminders, and admin work.
+Running a home-based or independent business is challenging, especially when it comes to managing appointments and communicating with clients. Nebula was created after hearing from real business owners (E.g., Home-based lash technicians) about the time lost to manual scheduling, reminders, and admin work.
 
 **Nebula gives you that time back.**  
 Our app automates appointment scheduling, reminders, and availability management, so you can focus on delivering great service—not paperwork.
