@@ -190,7 +190,7 @@ export default function BusinessDashboard() {
             zIndex: 9999,
           }}
         >
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+          <div className="bg-background text-foreground border p-8 shadow-lg w-full max-w-md rounded-3xl">
             <h2 className="text-xl mb-3">Edit Product</h2>
             <EditProductForm
               product={editingProduct}
@@ -225,7 +225,7 @@ export default function BusinessDashboard() {
             zIndex: 9999,
           }}
         >
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="bg-background text-foreground border p-8 shadow-lg w-full max-w-md rounded-3xl">
             <h2 className="text-xl mb-3">
               Comments for {commentsProduct.name}
             </h2>

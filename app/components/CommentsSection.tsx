@@ -199,7 +199,7 @@ export default function CommentsSection() {
             )}
             {/* Replies */}
             {c.replies?.length > 0 && (
-              <div className="ml-6 mt-3 space-y-2">
+              <div className="ml-6 mt-3 space-y-2 bg-back">
                 {c.replies.map((r) => (
                   <div key={r.id} className="bg-gray-100 p-2 rounded">
                     <div className="flex items-center gap-2">
