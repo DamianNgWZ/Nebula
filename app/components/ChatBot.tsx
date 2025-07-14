@@ -39,6 +39,7 @@ export default function ChatBot() {
       const data = await res.json();
       const botMessage: Message = { sender: "bot", text: data.answer };
       setMessages((prev) => [...prev, botMessage]);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setMessages((prev) => [
         ...prev,

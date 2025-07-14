@@ -29,7 +29,13 @@ const generateEmbedding = async (text: string) => {
 };
 
 // Pre-generate embeddings for all questions in the knowledge base and store them
-let knowledgeBaseEmbeddings: any[] = [];
+type KnowledgeBaseEntry = {
+  question: string;
+  answer: string;
+  embedding: number[];
+};
+
+const knowledgeBaseEmbeddings: KnowledgeBaseEntry[] = [];
 
 const generateKnowledgeBaseEmbeddings = async () => {
   for (const entry of knowledgeBase) {
