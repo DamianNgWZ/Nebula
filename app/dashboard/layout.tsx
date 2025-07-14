@@ -69,7 +69,8 @@ export default async function DashboardLayout({
             w-full"
       >
         <div
-          className="grid 
+          className="grid
+            min-h-screen
             md:grid-cols-[220px_1fr]
             lg:gird-cols-[280px_1fr]"
         >
@@ -161,7 +162,7 @@ export default async function DashboardLayout({
                 </DropdownMenu>
               </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto">
               {children}
             </main>
           </div>
