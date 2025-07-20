@@ -182,7 +182,7 @@ export default function CommentsSection() {
                       />
                     )}
                 </div>
-                <p className="text-gray-800">{c.content}</p>
+                <p className="text-foreground">{c.content}</p>
                 <p className="text-xs text-gray-500">
                   {new Date(c.createdAt).toLocaleString()}
                 </p>
