@@ -83,7 +83,7 @@ const findMostRelevantAnswer = (query: string, userRole: string) => {
 };
 
 // Function to generate response based on the user's query
-export async function generateResponse(query: string, userRole: string) {
+const generateResponse = async (query: string, userRole: string) => {
   let persona =
     "You are NebulAI, a helpful assistant that educates user about Nebula in a professional and friendly manner.";
 
@@ -123,7 +123,7 @@ export async function generateResponse(query: string, userRole: string) {
     console.error("Error calling OpenAI API:", error); // Log OpenAI API errors
     throw new Error("Failed to call OpenAI API"); // Rethrow if you want to handle it further
   }
-}
+};
 
 // POST method to actually handle the chatbot queries
 export async function POST(req: NextRequest) {
