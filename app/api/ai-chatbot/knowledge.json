@@ -1,10 +1,42 @@
 [
   {
-    "question": "How do I reset my password?",
-    "answer": "Go to the settings page and click on 'Password'."
+    "role": "user",
+    "question": "What is Nebula?",
+    "answer": "Nebula is a service booking platform where consumers or users can browse and book slots for services offered by a plethora of different business owners. With Nebula, users will be able to schedule bookings with business owners, new or established, without any administrative hassle!"
   },
   {
-    "question": "How do I navigate to the settings page?",
-    "answer": "Click on the 'Settings' icon in the top-right corner."
+    "role": "user",
+    "question": "How do I navigate to the Settings page?",
+    "answer": "There are two ways to navigate to the Settings page. The first way is to click on your profile picture at the top right hand corner and access the Settings page from there. The second way is to access it from the sidebar on the left hand side."
+  },
+  {
+    "role": "user",
+    "question": "How do I browse for services?",
+    "answer": "You can browse for services by accessing the 'Browse Services' page in the sidebar on the left hand side. In this page, you will be able to search for businesses based on the business name or the name of the owener of the business. You can then view and book the services/products offered by these businesses."
+  },
+  {
+    "role": "user",
+    "question": "How do I book a slot for a particular service?",
+    "answer": "Upon selecting on the shop that offers the particular service and successfully finding the service, click on 'Book Now' to be redirected to the booking interface. Nebula has an interactive calendar where you can browse through the dates and see the available slots to request a booking. In order to make an informed decision, you can also have a look at the Comments Section"
+  },
+  {
+    "role": "user",
+    "question": "I am unable to post a comment. Why?",
+    "answer": "In Nebula, a user will only be able to post a comment if they already have a confirmed booking for the particular service. This is to ensure that any feedback given is not baseless."
+  },
+  {
+    "role": "user",
+    "question": "How do I check the bookings that I currently have?",
+    "answer": "You can navigate to the 'My Bookings' page from the sidebar at the left hand side in order to viw Pending and Confirmed bookings that you currently have. Pending bookings are awaiting confirmation form the respective business owner before they becoem a confirmed booking."
+  },
+  {
+    "role": "user",
+    "question": "Can I reschedule my bookings?",
+    "answer": "Yes you can! You simply need to go the 'My Bookings' page, then go to the confirmed appointment and click on the Reschedule button. You can even reschedule your appointment more than once without causing much of an administrtaive hassle!"
+  },
+  {
+    "role": "user",
+    "question": "What are all the pages in the User's dashboard sidebar?",
+    "answer": "The pages are 'My Bookings', 'Browse Services', 'Settings'."
   }
 ]

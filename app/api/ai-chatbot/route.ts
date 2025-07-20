@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { isLoggedIn } from "@/app/lib/hooks";
-import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { NextApiRequest, NextApiResponse } from "next";
+import { isLoggedIn } from "@/app/lib/hooks";
+import prisma from "@/app/lib/db";
+import { NextRequest, NextResponse } from "next/server";
 
 // Initialise OpenAI API
 const openAi = new OpenAI({
@@ -18,103 +21,156 @@ const knowledgeBase = JSON.parse(
   )
 );
 
-// Function to generate embeddings for a given text
-const generateEmbedding = async (text: string) => {
-  const response = await openAi.embeddings.create({
-    model: "text-embedding-ada-002", // OpenAI's embedding model
-    input: text,
-  });
+// Function to calculate Levenshtein Distance
+const levenshteinDistance = (str1: string, str2: string) => {
+  const dp: number[][] = [];
 
-  return response.data[0].embedding; // Return the embedding vector
+  for (let i = 0; i <= str1.length; i++) {
+    dp[i] = [];
+    dp[i][0] = i;
+  }
+
+  for (let j = 0; j <= str2.length; j++) {
+    dp[0][j] = j;
+  }
+
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1, // Deletion
+        dp[i][j - 1] + 1, // Insertion
+        dp[i - 1][j - 1] + cost // Substitution
+      );
+    }
+  }
+
+  return dp[str1.length][str2.length];
 };
 
-// Pre-generate embeddings for all questions in the knowledge base and store them
-type KnowledgeBaseEntry = {
-  question: string;
-  answer: string;
-  embedding: number[];
+// Function to find the most relevant answer based on Levenshtein Distance
+const findMostRelevantAnswer = (query: string, userRole: string) => {
+  interface KnowledgeItem {
+    role: string;
+    question: string;
+    answer: string;
+  }
+
+  const relevantKnowledge: KnowledgeItem[] = (
+    knowledgeBase as KnowledgeItem[]
+  ).filter((item: KnowledgeItem) => item.role === userRole);
+
+  // If no relevant knowledge is found for the role, return a specific message
+  if (relevantKnowledge.length === 0) {
+    return "Sorry, I could not find an answer to your question.";
+  }
+
+  let closestMatch = "";
+  let lowestDistance = Infinity;
+
+  for (const item of relevantKnowledge) {
+    const distance = levenshteinDistance(
+      query.toLowerCase(),
+      item.question.toLowerCase()
+    );
+    if (distance < lowestDistance) {
+      lowestDistance = distance;
+      closestMatch = item.answer;
+    }
+  }
+
+  return closestMatch || "Sorry, I could not find an answer to your question.";
 };
 
-const knowledgeBaseEmbeddings: KnowledgeBaseEntry[] = [];
+// Function to generate response based on the user's query
+const generateResponse = async (query: string, userRole: string) => {
+  let persona =
+    "You are NebulAI, a helpful assistant that educates user about Nebula in a professional and friendly manner.";
 
-const generateKnowledgeBaseEmbeddings = async () => {
-  for (const entry of knowledgeBase) {
-    const embedding = await generateEmbedding(entry.question);
-    knowledgeBaseEmbeddings.push({
-      question: entry.question,
-      answer: entry.answer,
-      embedding,
+  if (userRole === "business_owner") {
+    persona =
+      "You are NebulAI, a helpful assistant that assists business owners in Nebula. Your role is to guide them on how to list their services, manage their availability, manage their bookings as well as general issues such as changing profile picture etc.";
+  } else if (userRole === "user") {
+    persona =
+      "You are NebulAI, a helpful assistant that assists potential customers with tasks such as browsing services, making bookings, rescheduling them etc.";
+  }
+
+  const fewShotPrompts: ChatCompletionMessageParam[] = [
+    { role: "system", content: persona },
+    { role: "user", content: "How to book a service?" },
+    {
+      role: "assistant",
+      content:
+        "To book a service, simply browse for the shop offering the service in 'Browse Services', click on the 'Book Now' button at the service, and make a booking at the bookimg interface based on your availability.",
+    },
+    { role: "user", content: query }, // For now one example and then user's query right away
+  ];
+
+  // Find the relevant answer from knowledge base
+  const correctKnowledge = findMostRelevantAnswer(query, userRole);
+
+  // Generate the final response as a result of few shot prompting
+  try {
+    const response = await openAi.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        ...fewShotPrompts,
+        { role: "assistant", content: correctKnowledge },
+      ],
     });
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error("Error calling OpenAI API:", error); // Log OpenAI API errors
+    throw new Error("Failed to call OpenAI API"); // Rethrow if you want to handle it further
   }
 };
 
-// Call the function to generate knowledge base embeddings once (NOT EVERY TIME)
-generateKnowledgeBaseEmbeddings();
-
-// Function to find the most similar answer based on embeddings
-const findMostSimilarAnswer = async (queryEmbedding: number[]) => {
-  let highestSimilarity = -Infinity;
-  let mostRelevantAnswer =
-    "Sorry, I could not find an answer to your question.";
-
-  knowledgeBaseEmbeddings.forEach((entry) => {
-    const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
-    if (similarity > highestSimilarity) {
-      highestSimilarity = similarity;
-      mostRelevantAnswer = entry.answer;
-    }
-  });
-
-  return mostRelevantAnswer;
-};
-
-// Function to calculate cosine similarity between two vectors
-const cosineSimilarity = (vec1: number[], vec2: number[]) => {
-  const dotProduct = vec1.reduce(
-    (sum, value, index) => sum + value * vec2[index],
-    0
-  );
-  const magnitude1 = Math.sqrt(
-    vec1.reduce((sum, value) => sum + value ** 2, 0)
-  );
-  const magnitude2 = Math.sqrt(
-    vec2.reduce((sum, value) => sum + value ** 2, 0)
-  );
-  return dotProduct / (magnitude1 * magnitude2);
-};
-
-// The actual POST method to handle chatbot queries
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// POST method to actually handle the chatbot queries
+export async function POST(req: NextRequest) {
   console.log("Received request");
 
   const session = await isLoggedIn();
+  console.log("Session:", session);
   if (!session || !session.user?.id) {
     console.log("User not logged in");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "User needs to be logged in" },
+      { status: 401 }
+    );
   }
 
-  console.log("Ensure logged in");
-
   try {
-    const { query } = await req.json(); // Extract the query
+    const { query } = await req.json();
+    console.log("Query:", query); // Log the query received
 
     if (!query) {
       console.log("Query missing");
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    // Generate the embedding for the user's query
-    const queryEmbedding = await generateEmbedding(query);
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    console.log("Prisma user:", user);
 
-    // Find the most similar answer based on embeddings and return it
-    const mostRelevantAnswer = await findMostSimilarAnswer(queryEmbedding);
+    if (!user) {
+      console.log("User not found");
+      return NextResponse.json({ error: "User is not found" }, { status: 404 });
+    }
+
+    let userRole = "user";
+
+    if (session.user.role === "BUSINESS_OWNER") {
+      userRole = "business_owner";
+    }
+
+    // Generate response
+    const response = await generateResponse(query, userRole);
 
     console.log("Answer generated");
 
-    return NextResponse.json({ answer: mostRelevantAnswer });
+    return NextResponse.json({ answer: response });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to process your request" },
@@ -122,5 +178,3 @@ export async function POST(
     );
   }
 }
-
-// new file
