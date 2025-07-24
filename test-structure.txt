@@ -5,3 +5,4 @@ nebula/
 ├── lib/
 │   ├── utils.test.ts # Booking Logic / Conflict checks testing here
 │   └── validation.test.ts # Form Validation tests here
+
