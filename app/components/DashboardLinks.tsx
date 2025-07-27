@@ -54,13 +54,13 @@ export const businessDashboardLinks: NavProps[] = [
   },
   {
     id: 1,
-    name: "My Products",
+    name: "My Services",
     href: "/dashboard/business/products",
     icon: Store,
   },
   {
     id: 2,
-    name: "Manage Your Availability",
+    name: "Add Your Availability",
     href: "/dashboard/business/availability",
     icon: CalendarCheck,
   },
