@@ -86,7 +86,7 @@ export default function BusinessDashboard() {
 
   return (
     <div className="p-6 space-y-10">
-      <h1 className="text-2xl font-bold">My Products</h1>
+      <h1 className="text-2xl font-bold">My Services</h1>
 
       {/* delete errors */}
       {deleteResult?.status === "error" && deleteResult.error && (
@@ -141,7 +141,7 @@ export default function BusinessDashboard() {
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="w-full mt-2">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Product
+                  Delete Service
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="!fixed !top-1/2 !left-1/2 !transform !-translate-x-1/2 !-translate-y-1/2 !z-[9999] !m-0">
@@ -149,7 +149,7 @@ export default function BusinessDashboard() {
                   <AlertDialogTitle>Are you SURE?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the product &quot;{product.name}&quot; and remove it from
+                    the service &quot;{product.name}&quot; and remove it from
                     your shop.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -191,7 +191,7 @@ export default function BusinessDashboard() {
           }}
         >
           <div className="bg-background text-foreground border p-8 shadow-lg w-full max-w-md rounded-3xl">
-            <h2 className="text-xl mb-3">Edit Product</h2>
+            <h2 className="text-xl mb-3">Edit Service</h2>
             <EditProductForm
               product={editingProduct}
               onSave={async () => {
@@ -246,7 +246,7 @@ export default function BusinessDashboard() {
       {/* product form */}
       <Card className="max-w-md">
         <CardHeader>
-          <CardTitle className="text-xl">Create New Product</CardTitle>
+          <CardTitle className="text-xl">Create New Service</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -262,7 +262,7 @@ export default function BusinessDashboard() {
                 id={fields.name.id}
                 name={fields.name.name}
                 defaultValue={fields.name.initialValue}
-                placeholder="Product name"
+                placeholder="Service name"
               />
               {fields.name.errors && (
                 <p className="text-sm text-red-500">
@@ -329,7 +329,7 @@ export default function BusinessDashboard() {
               </div>
             )}
 
-            <SubmitButton text="Create Product" className="w-full" />
+            <SubmitButton text="Create Service" className="w-full" />
           </form>
         </CardContent>
       </Card>

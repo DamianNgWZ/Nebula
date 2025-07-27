@@ -6,6 +6,11 @@
   },
   {
     "role": "user",
+    "question": "What is your name?",
+    "answer": "Hello there, I am NebulAI, an AI assistant who can clarify any queries you have regarding the Nebula platform."
+  },
+  {
+    "role": "user",
     "question": "How do I navigate to the Settings page?",
     "answer": "There are two ways to navigate to the Settings page. The first way is to click on your profile picture at the top right hand corner and access the Settings page from there. The second way is to access it from the sidebar on the left hand side."
   },
@@ -32,11 +37,106 @@
   {
     "role": "user",
     "question": "Can I reschedule my bookings?",
-    "answer": "Yes you can! You simply need to go the 'My Bookings' page, then go to the confirmed appointment and click on the Reschedule button. You can even reschedule your appointment more than once without causing much of an administrtaive hassle!"
+    "answer": "Yes you can! You simply need to go the 'My Bookings' page, then go to the confirmed appointment and click on the Reschedule button. You can even reschedule your appointment more than once without causing much of an administrative hassle!"
+  },
+  {
+    "role": "user",
+    "question": "Can I cancel a booking after I have confirmed it?",
+    "answer": "Unfortunately, you cannot cancel a booking that is confirmed. However, you can request to reschedule the booking."
+  },
+  {
+    "role": "user",
+    "question": "Can I reset my password?",
+    "answer": "Since we only offer two modes of login, via Google and GitHub, the only way for you to reset your 'password' is to change the password to either your Google or GitHub account."
   },
   {
     "role": "user",
     "question": "What are all the pages in the User's dashboard sidebar?",
     "answer": "The pages are 'My Bookings', 'Browse Services', 'Settings'."
+  },
+  {
+    "role": "user",
+    "question": "How do I contact the business owner if I have any issues with my bookings?",
+    "answer": "Although it is not possible to directly contact the business owner, any issues with confirmed bookings can possibly be resolved by submitting a request to reschedule the booking."
+  },
+  {
+    "role": "user",
+    "question": "How do I check if a businesses is available for a specific services?",
+    "answer": "Unfortunately, it is not possible as of yet for you to search for a business by searching the kind of service offered in the search bar. The searchbar in the 'Browse Services' page only searches for businesses by their shop name / owner name."
+  },
+  {
+    "role": "user",
+    "question": "How do I update my profile picture?",
+    "answer": "One can simply navigate to the Settings page in order to change their profile picture."
+  },
+  {
+    "role": "user",
+    "question": "Can I reset my password?",
+    "answer": "Since we only offer two modes of login, via Google and GitHub, the only way for you to reset your 'password' is to change the password to either your Google or GitHub account."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I update my profile picture?",
+    "answer": "One can simply navigate to the Settings page in order to change their profile picture."
+  },
+  {
+    "role": "business-owner",
+    "question": "What is Nebula?",
+    "answer": "Nebula is a service booking platform where consumers or users can browse and book slots for services offered by a plethora of different business owners. With Nebula, users will be able to schedule bookings with business owners, new or established, without any administrative hassle!"
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I navigate to the 'My Services' page?",
+    "answer": "You should navigate to the 'My Services' section by clicking on the 'My Services' option on the sidebar menu."
+  }
+  {
+    "role": "business-owner",
+    "question": "How do I navigate to the Settings page?",
+    "answer": "There are two ways to navigate to the Settings page. The first way is to click on your profile picture at the top right hand corner and access the Settings page from there. The second way is to access it from the sidebar on the left hand side."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I change my profile picture?",
+    "answer": "One can simply navigate to the Settings page in order to change their profile picture."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I add the services I offer as a business owner?",
+    "answer": "A business owner would need to have created a shop firstly. If this has already been done, go to 'My Services' and use the 'Create Service' form to list the services you offer one by one."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I remove the services I offer?",
+    "answer": "A service you offer can only be removed if there are no existing confirmed bookings. If this condiiton is met, you can go to 'My Services' and click on the 'Delete Service' button for the respective service that you want to remove."
+  },
+  {
+    "role": "business-owner",
+    "question": "I want to delete a service but I have confirmed bookings. What should I do?",
+    "answer": "Unfortunately, the criteria for removing a service is not met in this case. When a confirmed booking exists, a business owner cannot delete a service."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do you manage bookings?",
+    "answer": "Navigate to the 'My Bookings' page and you will see the list of bookings, both pending and confirmed. You are required to either accept or decline a pending booking. Upon accepting it, both your Google Calendar as well as the user's one will be updated accoridingly."
+  },
+  {
+    "role": "business-owner",
+    "question": "How do I manage my availability for bookings as a business owner?",
+    "answer": "Navigate to the 'Manage Your Availability' page. Over here, you can add available slots for a particular date, for particular days of a week in a particular month, or for a date range."
+  },
+  {
+    "role": "business-owner",
+    "question": "What is your name?",
+    "answer": "Hello there, I am NebulAI, an AI assistant who can clarify any queries you have regarding the Nebula platform."
+  },
+  {
+    "role": "business-owner",
+    "question": "Can I reset my password?",
+    "answer": "Since we only offer two modes of login, via Google and GitHub, the only way for you to reset your 'password' is to change the password to either your Google or GitHub account."
+  },
+  {
+    "role": "business-owner",
+    "question": "What should I do if a customer has submitted a reschedule request for one of my services?",
+    "answer": "You can either accept the request, which would change the timing of the appointment as per the request, or decline it if you are unavailable."
   }
 ]
